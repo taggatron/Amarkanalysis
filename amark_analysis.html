@@ -1418,6 +1418,115 @@
                             <canvas id="sectionTrendChart"></canvas>
                         </div>
                     </div>
+
+                    <!-- Section Significance Analysis Card -->
+                    <div class="dashboard-card" style="grid-column: 1 / -1; margin-top: 1rem;">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                    style="stroke: var(--secondary);">
+                                    <line x1="18" y1="20" x2="18" y2="10"></line>
+                                    <line x1="12" y1="20" x2="12" y2="4"></line>
+                                    <line x1="6" y1="20" x2="6" y2="14"></line>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                                Statistical Significance Outlier Testing (Welch's t-test)
+                            </h3>
+                            <div class="card-actions" id="statsSectionBadge" style="font-size: 0.8rem; font-weight: 600; padding: 0.25rem 0.6rem; border-radius: 4px; background: rgba(255,255,255,0.06); color: var(--text-primary);">
+                                All Sections
+                            </div>
+                        </div>
+                        <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: -0.5rem;">
+                            Compares the selected section against all other sections combined using Welch's t-test (two-tailed). This test evaluates whether the selected section has statistically different absence dynamics.
+                        </p>
+                        
+                        <div id="statsSectionOverview" style="display: none; margin-top: 1rem;">
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
+                                <!-- Metric 1: Total absences -->
+                                <div class="stats-metric-card" style="padding: 1rem; border-radius: 8px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04);">
+                                    <h4 style="margin: 0 0 0.5rem 0; font-size: 0.9rem; color: var(--text-primary);">Mean Total Absences (A-Marks)</h4>
+                                    <table style="width: 100%; font-size: 0.8rem; border-collapse: collapse;">
+                                        <tr>
+                                            <td style="padding: 0.25rem 0; color: var(--text-secondary);">This Section:</td>
+                                            <td id="statsTotalMeanSec" style="padding: 0.25rem 0; text-align: right; font-weight: 600; color: var(--text-primary);">-</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding: 0.25rem 0; color: var(--text-secondary);">Other Sections:</td>
+                                            <td id="statsTotalMeanOthers" style="padding: 0.25rem 0; text-align: right; font-weight: 600; color: var(--text-primary);">-</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding: 0.25rem 0; color: var(--text-secondary);">t-Statistic:</td>
+                                            <td id="statsTotalT" style="padding: 0.25rem 0; text-align: right; font-family: monospace; color: var(--text-primary);">-</td>
+                                        </tr>
+                                        <tr style="border-top: 1px dashed rgba(255,255,255,0.1);">
+                                            <td style="padding: 0.4rem 0 0 0; font-weight: 600; color: var(--text-primary);">p-Value:</td>
+                                            <td id="statsTotalP" style="padding: 0.4rem 0 0 0; text-align: right; font-weight: 700; font-family: monospace; color: var(--text-primary);">-</td>
+                                        </tr>
+                                    </table>
+                                    <div id="statsTotalVerdict" style="margin-top: 0.8rem; font-size: 0.75rem; padding: 0.35rem 0.5rem; border-radius: 4px; text-align: center; font-weight: 600;">
+                                        -
+                                    </div>
+                                </div>
+
+                                <!-- Metric 2: Max weekly absences -->
+                                <div class="stats-metric-card" style="padding: 1rem; border-radius: 8px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04);">
+                                    <h4 style="margin: 0 0 0.5rem 0; font-size: 0.9rem; color: var(--text-primary);">Mean Max Weekly Absences</h4>
+                                    <table style="width: 100%; font-size: 0.8rem; border-collapse: collapse;">
+                                        <tr>
+                                            <td style="padding: 0.25rem 0; color: var(--text-secondary);">This Section:</td>
+                                            <td id="statsMaxMeanSec" style="padding: 0.25rem 0; text-align: right; font-weight: 600; color: var(--text-primary);">-</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding: 0.25rem 0; color: var(--text-secondary);">Other Sections:</td>
+                                            <td id="statsMaxMeanOthers" style="padding: 0.25rem 0; text-align: right; font-weight: 600; color: var(--text-primary);">-</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding: 0.25rem 0; color: var(--text-secondary);">t-Statistic:</td>
+                                            <td id="statsMaxT" style="padding: 0.25rem 0; text-align: right; font-family: monospace; color: var(--text-primary);">-</td>
+                                        </tr>
+                                        <tr style="border-top: 1px dashed rgba(255,255,255,0.1);">
+                                            <td style="padding: 0.4rem 0 0 0; font-weight: 600; color: var(--text-primary);">p-Value:</td>
+                                            <td id="statsMaxP" style="padding: 0.4rem 0 0 0; text-align: right; font-weight: 700; font-family: monospace; color: var(--text-primary);">-</td>
+                                        </tr>
+                                    </table>
+                                    <div id="statsMaxVerdict" style="margin-top: 0.8rem; font-size: 0.75rem; padding: 0.35rem 0.5rem; border-radius: 4px; text-align: center; font-weight: 600;">
+                                        -
+                                    </div>
+                                </div>
+
+                                <!-- Metric 3: Change score -->
+                                <div class="stats-metric-card" style="padding: 1rem; border-radius: 8px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04);">
+                                    <h4 style="margin: 0 0 0.5rem 0; font-size: 0.9rem; color: var(--text-primary);">Mean Change Score (Escalation)</h4>
+                                    <table style="width: 100%; font-size: 0.8rem; border-collapse: collapse;">
+                                        <tr>
+                                            <td style="padding: 0.25rem 0; color: var(--text-secondary);">This Section:</td>
+                                            <td id="statsChangeMeanSec" style="padding: 0.25rem 0; text-align: right; font-weight: 600; color: var(--text-primary);">-</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding: 0.25rem 0; color: var(--text-secondary);">Other Sections:</td>
+                                            <td id="statsChangeMeanOthers" style="padding: 0.25rem 0; text-align: right; font-weight: 600; color: var(--text-primary);">-</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding: 0.25rem 0; color: var(--text-secondary);">t-Statistic:</td>
+                                            <td id="statsChangeT" style="padding: 0.25rem 0; text-align: right; font-family: monospace; color: var(--text-primary);">-</td>
+                                        </tr>
+                                        <tr style="border-top: 1px dashed rgba(255,255,255,0.1);">
+                                            <td style="padding: 0.4rem 0 0 0; font-weight: 600; color: var(--text-primary);">p-Value:</td>
+                                            <td id="statsChangeP" style="padding: 0.4rem 0 0 0; text-align: right; font-weight: 700; font-family: monospace; color: var(--text-primary);">-</td>
+                                        </tr>
+                                    </table>
+                                    <div id="statsChangeVerdict" style="margin-top: 0.8rem; font-size: 0.75rem; padding: 0.35rem 0.5rem; border-radius: 4px; text-align: center; font-weight: 600;">
+                                        -
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="statsEmptyState" style="padding: 3rem 2rem; text-align: center; color: var(--text-secondary); font-size: 0.9rem;">
+                            Select a specific section from the dropdown above or click a legend line to run statistical significance outlier tests.
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Initial Empty State -->
@@ -1464,6 +1573,118 @@
             }
         }
 
+
+        // Student's t-distribution probability density function (PDF)
+        function tPDF(x, v) {
+            // Lanczos LogGamma function approximation
+            function logGamma(z) {
+                const g = 7;
+                const p = [
+                    0.99999999999980993,
+                    676.5203681218851,
+                    -1259.1392167224028,
+                    771.3234285076531,
+                    -176.61502916214059,
+                    12.507343278686905,
+                    -0.13857109526572012,
+                    9.9843695780195716e-6,
+                    1.5056327351493116e-7
+                ];
+                if (z < 0.5) return Math.log(Math.PI / Math.sin(Math.PI * z)) - logGamma(1 - z);
+                z -= 1;
+                let xVal = p[0];
+                for (let i = 1; i < g + 2; i++) {
+                    xVal += p[i] / (z + i);
+                }
+                const tVal = z + g + 0.5;
+                return 0.5 * Math.log(2 * Math.PI) + (z + 0.5) * Math.log(tVal) - tVal + Math.log(xVal);
+            }
+
+            const logNum = logGamma((v + 1) / 2);
+            const logDen = 0.5 * Math.log(v * Math.PI) + logGamma(v / 2);
+            const logConst = logNum - logDen;
+            return Math.exp(logConst) * Math.pow(1 + (x * x) / v, -(v + 1) / 2);
+        }
+
+        // Student's t-distribution Cumulative Distribution Function (CDF) using Simpson's Rule integration
+        function tCDF(t, v) {
+            if (t === 0) return 0.5;
+            if (t > 0) return 1 - tCDF(-t, v);
+
+            const start = -25;
+            const end = t;
+            if (end <= start) return 0;
+            const n = 500; // 500 intervals is extremely fast and very precise (e.g. 0.050012 for df=10 target 0.050)
+            const h = (end - start) / n;
+
+            let sum = tPDF(start, v) + tPDF(end, v);
+            for (let i = 1; i < n; i++) {
+                const xVal = start + i * h;
+                sum += (i % 2 === 0 ? 2 : 4) * tPDF(xVal, v);
+            }
+            return Math.max(0, Math.min(1, sum * h / 3));
+        }
+
+        // Calculate two-tailed p-value for a given t-statistic and degrees of freedom
+        function getPValue(t, df) {
+            const pLower = tCDF(-Math.abs(t), df);
+            return 2 * pLower;
+        }
+
+        // Welch's t-test calculation (does not assume equal variances)
+        function runWelchTTest(secValues, otherValues) {
+            const n1 = secValues.length;
+            const n2 = otherValues.length;
+            if (n1 < 2 || n2 < 2) {
+                return { error: 'Sample size too small (N < 2)' };
+            }
+
+            const mean1 = secValues.reduce((a, b) => a + b, 0) / n1;
+            const mean2 = otherValues.reduce((a, b) => a + b, 0) / n2;
+
+            const var1 = secValues.reduce((sum, val) => sum + Math.pow(val - mean1, 2), 0) / (n1 - 1);
+            const var2 = otherValues.reduce((sum, val) => sum + Math.pow(val - mean2, 2), 0) / (n2 - 1);
+
+            // Edge case: zero variance in both groups
+            if (var1 === 0 && var2 === 0) {
+                return {
+                    mean1, mean2, n1, n2,
+                    tStat: 0,
+                    df: n1 + n2 - 2,
+                    pValue: mean1 === mean2 ? 1 : 0,
+                    isSignificant: mean1 !== mean2
+                };
+            }
+
+            const se = Math.sqrt((var1 / n1) + (var2 / n2));
+            if (se === 0) {
+                return {
+                    mean1, mean2, n1, n2,
+                    tStat: 0,
+                    df: n1 + n2 - 2,
+                    pValue: mean1 === mean2 ? 1 : 0,
+                    isSignificant: mean1 !== mean2
+                };
+            }
+
+            const tStat = (mean1 - mean2) / se;
+
+            // Welch–Satterthwaite degrees of freedom formula
+            const num = Math.pow((var1 / n1) + (var2 / n2), 2);
+            const den = (Math.pow(var1 / n1, 2) / (n1 - 1)) + (Math.pow(var2 / n2, 2) / (n2 - 1));
+            let df = num / den;
+            df = Math.max(1, df);
+
+            const pVal = getPValue(tStat, df);
+
+            return {
+                mean1, mean2, n1, n2,
+                var1, var2,
+                tStat, df,
+                pValue: pVal,
+                isSignificant: pVal < 0.05
+            };
+        }
 
         // State Variables
         let rawData = null;
@@ -2459,6 +2680,13 @@
                 document.getElementById('overviewHighConf').innerText = highCount;
                 document.getElementById('overviewMedLowConf').innerText = medLowCount;
 
+                // Reset section selector to sync with overview mode
+                const secDropdown = document.getElementById('sectionSelect');
+                if (secDropdown) {
+                    secDropdown.value = 'ALL';
+                    updateSectionChart();
+                }
+
                 // Draw Overview Chart
                 drawDetailChart();
                 return;
@@ -2523,6 +2751,23 @@
                 wContainer.style.display = 'none';
             }
 
+            // Sync section dropdown to target course's section (course area)
+            const secDropdown = document.getElementById('sectionSelect');
+            if (secDropdown) {
+                const targetSec = course.section || 'ALL';
+                let exists = false;
+                for (let i = 0; i < secDropdown.options.length; i++) {
+                    if (secDropdown.options[i].value === targetSec) {
+                        exists = true;
+                        break;
+                    }
+                }
+                if (exists) {
+                    secDropdown.value = targetSec;
+                    updateSectionChart();
+                }
+            }
+
             // Draw Chart
             drawDetailChart();
         }
@@ -2548,8 +2793,8 @@
                 ctx.setLineDash([5, 5]);
 
                 const borders = [
-                    { idx: 25, label: 'Pre-Easter Break' },
-                    { idx: 30, label: 'Pre-May Half Term' }
+                    { idx: 25, label: 'Pre-Easter Break', yOffset: 12 },
+                    { idx: 30, label: 'Pre-May Half Term', yOffset: 26 }
                 ];
 
                 borders.forEach(b => {
@@ -2569,7 +2814,7 @@
                         ctx.fillStyle = '#a5a1b8';
                         ctx.font = '9px Outfit, sans-serif';
                         ctx.textAlign = 'right';
-                        ctx.fillText(b.label, xPos - 5, top + 12);
+                        ctx.fillText(b.label, xPos - 5, top + b.yOffset);
                     }
                 });
                 ctx.restore();
@@ -2935,6 +3180,20 @@
                             labels: {
                                 color: '#9c97b5',
                                 font: { family: 'Outfit', size: 10 }
+                            },
+                            onClick: function(e, legendItem, legend) {
+                                // Clicking a legend item toggles showing only that section (isolating it) vs showing all
+                                const label = legendItem.text;
+                                const secName = label.split(' ')[0];
+                                const selectEl = document.getElementById('sectionSelect');
+                                if (selectEl) {
+                                    if (selectEl.value === secName) {
+                                        selectEl.value = 'ALL';
+                                    } else {
+                                        selectEl.value = secName;
+                                    }
+                                    updateSectionChart();
+                                }
                             }
                         },
                         tooltip: {
@@ -2995,6 +3254,90 @@
                 },
                 plugins: [termBordersPlugin]
             });
+
+            // --- Statistical Significance Outlier Test ---
+            const badge = document.getElementById('statsSectionBadge');
+            const overviewDiv = document.getElementById('statsSectionOverview');
+            const emptyState = document.getElementById('statsEmptyState');
+
+            if (selectedSec === 'ALL') {
+                if (badge) badge.innerText = "All Sections";
+                if (overviewDiv) overviewDiv.style.display = 'none';
+                if (emptyState) emptyState.style.display = 'block';
+            } else {
+                if (badge) badge.innerText = `Section Outlier Test: ${selectedSec}`;
+                if (overviewDiv) overviewDiv.style.display = 'block';
+                if (emptyState) emptyState.style.display = 'none';
+
+                // Filter processed courses into this section vs all other sections combined
+                const sampleSec = processedCourses.filter(c => (c.section || 'Unknown') === selectedSec);
+                const sampleOthers = processedCourses.filter(c => (c.section || 'Unknown') !== selectedSec);
+
+                const renderTTestResult = (metricName, secValues, otherValues, meanSecId, meanOthersId, tStatId, pValId, verdictId) => {
+                    const result = runWelchTTest(secValues, otherValues);
+                    
+                    const meanSecEl = document.getElementById(meanSecId);
+                    const meanOthersEl = document.getElementById(meanOthersId);
+                    const tStatEl = document.getElementById(tStatId);
+                    const pValEl = document.getElementById(pValId);
+                    const verdictEl = document.getElementById(verdictId);
+
+                    if (result.error) {
+                        if (meanSecEl) meanSecEl.innerText = 'N/A';
+                        if (meanOthersEl) meanOthersEl.innerText = 'N/A';
+                        if (tStatEl) tStatEl.innerText = 'N/A';
+                        if (pValEl) pValEl.innerText = 'N/A';
+                        if (verdictEl) {
+                            verdictEl.innerText = result.error;
+                            verdictEl.style.background = 'rgba(255, 255, 255, 0.06)';
+                            verdictEl.style.color = 'var(--text-secondary)';
+                        }
+                        return;
+                    }
+
+                    const diff = result.mean1 - result.mean2;
+                    const pFormatted = result.pValue < 0.0001 ? '< 0.0001' : result.pValue.toFixed(4);
+
+                    if (meanSecEl) meanSecEl.innerText = `${result.mean1.toFixed(2)} (N=${result.n1})`;
+                    if (meanOthersEl) meanOthersEl.innerText = `${result.mean2.toFixed(2)} (N=${result.n2})`;
+                    if (tStatEl) tStatEl.innerText = result.tStat.toFixed(3);
+                    if (pValEl) pValEl.innerText = pFormatted;
+
+                    if (verdictEl) {
+                        if (result.isSignificant) {
+                            if (diff > 0) {
+                                verdictEl.innerText = 'Significantly Higher (p < 0.05)';
+                                verdictEl.style.background = 'rgba(239, 68, 68, 0.15)';
+                                verdictEl.style.color = '#fca5a5';
+                            } else {
+                                verdictEl.innerText = 'Significantly Lower (p < 0.05)';
+                                verdictEl.style.background = 'rgba(16, 185, 129, 0.15)';
+                                verdictEl.style.color = '#a7f3d0';
+                            }
+                        } else {
+                            verdictEl.innerText = 'Not Statistically Different';
+                            verdictEl.style.background = 'rgba(255, 255, 255, 0.06)';
+                            verdictEl.style.color = '#d1d5db';
+                        }
+                    }
+                };
+
+                // Run Welch's t-test on three key absence metrics
+                // 1. Total absences in sequential academic weeks
+                const totalSec = sampleSec.map(c => c.totalAMarks || 0);
+                const totalOthers = sampleOthers.map(c => c.totalAMarks || 0);
+                renderTTestResult('Total Absences', totalSec, totalOthers, 'statsTotalMeanSec', 'statsTotalMeanOthers', 'statsTotalT', 'statsTotalP', 'statsTotalVerdict');
+
+                // 2. Maximum weekly absences recorded
+                const maxSec = sampleSec.map(c => c.maxWeeklyAMarks || 0);
+                const maxOthers = sampleOthers.map(c => c.maxWeeklyAMarks || 0);
+                renderTTestResult('Max Weekly Absences', maxSec, maxOthers, 'statsMaxMeanSec', 'statsMaxMeanOthers', 'statsMaxT', 'statsMaxP', 'statsMaxVerdict');
+
+                // 3. Escalation change score
+                const changeSec = sampleSec.map(c => c.changeScore || 0);
+                const changeOthers = sampleOthers.map(c => c.changeScore || 0);
+                renderTTestResult('Absence Change Score', changeSec, changeOthers, 'statsChangeMeanSec', 'statsChangeMeanOthers', 'statsChangeT', 'statsChangeP', 'statsChangeVerdict');
+            }
         }
 
         // Switch active Tab
