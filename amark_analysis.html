@@ -2222,7 +2222,7 @@
             weekDistribution.forEach(wd => {
                 if (wd.count > maxCount && wd.count > 0) {
                     maxCount = wd.count;
-                    commonWeek = `Week ${wd.week}`;
+                    commonWeek = `Academic Week ${wd.week}`;
                 }
             });
             document.getElementById('kpiCommonWeek').innerText = commonWeek;
@@ -2482,10 +2482,10 @@
             document.getElementById('detailCourseTitle').innerText = course.courseTitle;
             document.getElementById('detailSection').innerText = course.section || 'Unknown';
             document.getElementById('detailGroup').innerText = course.groupDesc || 'N/A';
-            document.getElementById('detailMaxA').innerText = `${course.maxWeeklyAMarks} (Week ${course.maxWeek})`;
+            document.getElementById('detailMaxA').innerText = `${course.maxWeeklyAMarks} (Academic Week ${course.maxWeek})`;
             
             if (course.isFlagged) {
-                document.getElementById('detailIncreaseWk').innerText = `Week ${course.changeWeek} (${course.weeklyMarks[course.changeWeek - 1]} A)`;
+                document.getElementById('detailIncreaseWk').innerText = `Academic Week ${course.changeWeek} (${course.academicWeeklyMarks[course.changeWeek - 1]} A)`;
                 document.getElementById('detailChangeScore').innerText = `+${(course.changeScore * 100).toFixed(0)}%`;
 
                 const confBadge = document.getElementById('detailConfRating');
@@ -2542,8 +2542,8 @@
                 detailChart.destroy();
             }
 
-            const pCutoffWeek = document.getElementById('cutoffWeek') ? parseInt(document.getElementById('cutoffWeek').value) : 46;
-            const labels = Array.from({ length: 52 }, (_, i) => i + 1);
+            const pCutoffWeek = document.getElementById('cutoffWeek') ? parseInt(document.getElementById('cutoffWeek').value) : 34;
+            const labels = Array.from({ length: 40 }, (_, i) => i + 1);
             let dataPoints = [];
             let yLabel = '';
             let stepSize = undefined;
@@ -2551,16 +2551,16 @@
 
             if (selectedCourseIndex === null) {
                 // Calculate average raw A marks across all processed courses per week
-                const avgWeekly = Array(52).fill(0);
+                const avgWeekly = Array(40).fill(0);
                 if (processedCourses.length > 0) {
-                    for (let w = 0; w < 52; w++) {
+                    for (let w = 0; w < 40; w++) {
                         if (w >= pCutoffWeek) {
                             avgWeekly[w] = null; // Future weeks are null
                             continue;
                         }
                         let sum = 0;
                         processedCourses.forEach(c => {
-                            sum += c.weeklyMarks[w] || 0;
+                            sum += c.academicWeeklyMarks[w] || 0;
                         });
                         avgWeekly[w] = sum / processedCourses.length;
                     }
@@ -2582,14 +2582,8 @@
                             borderWidth: 2,
                             fill: true,
                             tension: 0.2,
-                            pointBackgroundColor: labels.map(w => {
-                                if (HOLIDAY_WEEKS[w]) return 'rgba(255, 255, 255, 0.15)'; // Gray out for holidays
-                                return '#06b6d4';
-                            }),
-                            pointRadius: labels.map(w => {
-                                if (HOLIDAY_WEEKS[w]) return 1; // Smaller point for holidays
-                                return 3;
-                            }),
+                            pointBackgroundColor: '#06b6d4',
+                            pointRadius: 3,
                             pointHoverRadius: 6
                         }]
                     },
@@ -2607,8 +2601,7 @@
                                 callbacks: {
                                     title: function(context) {
                                         const w = context[0].parsed.x + 1;
-                                        const holidayName = HOLIDAY_WEEKS[w];
-                                        return `Week ${w}` + (holidayName ? ` [Holiday: ${holidayName}]` : '');
+                                        return `Academic Week ${w}`;
                                     },
                                     label: function (context) {
                                         return `Avg Absences: ${context.parsed.y.toFixed(2)}`;
@@ -2619,7 +2612,7 @@
                         scales: {
                             x: {
                                 grid: { color: 'rgba(255,255,255,0.04)' },
-                                ticks: { color: '#9c97b5', font: { family: 'Outfit', size: 9 }, maxTicksLimit: 26 },
+                                ticks: { color: '#9c97b5', font: { family: 'Outfit', size: 9 } },
                                 title: { display: true, text: 'Academic Week', color: '#9c97b5', font: { family: 'Outfit', size: 10 } }
                             },
                             y: {
@@ -2635,7 +2628,7 @@
             } else {
                 const course = processedCourses[selectedCourseIndex];
                 if (detailChartMode === 'RAW') {
-                    dataPoints = course.weeklyMarks.map((val, idx) => idx >= pCutoffWeek ? null : val);
+                    dataPoints = course.academicWeeklyMarks.map((val, idx) => idx >= pCutoffWeek ? null : val);
                     yLabel = 'A Marks (Absence Count)';
                     yMax = Math.max(5, Math.ceil(course.maxWeeklyAMarks * 1.15));
                     stepSize = Math.max(1, Math.ceil(yMax / 5));
@@ -2663,13 +2656,11 @@
                             fill: true,
                             tension: 0.2,
                             pointBackgroundColor: labels.map(w => {
-                                if (HOLIDAY_WEEKS[w]) return 'rgba(255, 255, 255, 0.15)'; // Gray out for holidays
                                 if (w === changeWk) return '#ec4899'; // Pink marker for change-week
                                 if (w === maxWk) return '#10b981'; // Green marker for max-week
                                 return '#8f43ec';
                             }),
                             pointRadius: labels.map(w => {
-                                if (HOLIDAY_WEEKS[w]) return 2; // Smaller radius for holidays
                                 if (w === changeWk || w === maxWk) return 6;
                                 return 3;
                             }),
@@ -2692,8 +2683,7 @@
                                 callbacks: {
                                     title: function(context) {
                                         const w = context[0].parsed.x + 1;
-                                        const holidayName = HOLIDAY_WEEKS[w];
-                                        return `Week ${w}` + (holidayName ? ` [Holiday: ${holidayName}]` : '');
+                                        return `Academic Week ${w}`;
                                     },
                                     label: function (context) {
                                         let label = context.dataset.label || '';
@@ -2718,8 +2708,7 @@
                                 },
                                 ticks: {
                                     color: '#9c97b5',
-                                    font: { family: 'Outfit', size: 9 },
-                                    maxTicksLimit: 26
+                                    font: { family: 'Outfit', size: 9 }
                                 },
                                 title: {
                                     display: true,
@@ -2817,7 +2806,7 @@
             activeWeeks.forEach(wd => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                <td><strong>Week ${wd.week}</strong></td>
+                <td><strong>Academic Week ${wd.week}</strong></td>
                 <td style="text-align: right;"><strong>${wd.count}</strong></td>
                 <td style="text-align: right;">${wd.pctOfFlagged.toFixed(1)}%</td>
                 <td style="text-align: right;">${wd.pctOfAllFT.toFixed(2)}%</td>
@@ -2846,13 +2835,13 @@
                 if (!sectionsData[sec]) {
                     sectionsData[sec] = {
                         count: 0,
-                        weeklySums: Array(52).fill(0)
+                        weeklySums: Array(40).fill(0)
                     };
                 }
 
                 sectionsData[sec].count++;
-                for (let w = 0; w < 52; w++) {
-                    sectionsData[sec].weeklySums[w] += (c.weeklyMarks[w] / c.maxWeeklyAMarks);
+                for (let w = 0; w < 40; w++) {
+                    sectionsData[sec].weeklySums[w] += (c.academicWeeklyMarks[w] / c.maxWeeklyAMarks);
                 }
             });
 
@@ -2862,7 +2851,7 @@
                 '#ef4444', '#3b82f6', '#14b8a6', '#f43f5e', '#6366f1'
             ];
 
-            const pCutoffWeek = document.getElementById('cutoffWeek') ? parseInt(document.getElementById('cutoffWeek').value) : 46;
+            const pCutoffWeek = document.getElementById('cutoffWeek') ? parseInt(document.getElementById('cutoffWeek').value) : 34;
             let colorIdx = 0;
 
             Object.keys(sectionsData).forEach(sec => {
@@ -2887,7 +2876,7 @@
             secChart = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: Array.from({ length: 52 }, (_, i) => i + 1),
+                    labels: Array.from({ length: 40 }, (_, i) => i + 1),
                     datasets: datasets
                 },
                 options: {
@@ -2910,8 +2899,7 @@
                             callbacks: {
                                 title: function(context) {
                                     const w = context[0].parsed.x + 1;
-                                    const holidayName = HOLIDAY_WEEKS[w];
-                                    return `Week ${w}` + (holidayName ? ` [Holiday: ${holidayName}]` : '');
+                                    return `Academic Week ${w}`;
                                 },
                                 label: function(context) {
                                     let label = context.dataset.label.split(' (')[0] || '';
@@ -2931,8 +2919,13 @@
                             grid: { color: 'rgba(255, 255, 255, 0.04)' },
                             ticks: {
                                 color: '#9c97b5',
-                                font: { family: 'Outfit', size: 9 },
-                                maxTicksLimit: 26
+                                font: { family: 'Outfit', size: 9 }
+                            },
+                            title: {
+                                display: true,
+                                text: 'Academic Week',
+                                color: '#9c97b5',
+                                font: { family: 'Outfit', size: 10 }
                             }
                         },
                         y: {
@@ -2979,14 +2972,14 @@
 
             const headers = [
                 "Course Code", "Course Title", "Section", "Group Description",
-                "Dramatic Increase Week", "Week of Maximum A Marks", "Maximum Weekly A Marks",
-                "A Marks in Increase Week", "Normalised A Mark % in Increase Week",
+                "Dramatic Increase Academic Week", "Academic Week of Maximum A Marks", "Maximum Weekly A Marks",
+                "A Marks in Increase Academic Week", "Normalised A Mark % in Increase Academic Week",
                 "Avg Normalised % Before", "Avg Normalised % After",
                 "Change Score", "Confidence Rating", "Reason for Flag", "Possible False Positive Warnings"
             ];
 
             const rows = flaggedCourses.map(c => {
-                const rawInIncreaseWk = c.weeklyMarks[c.changeWeek - 1];
+                const rawInIncreaseWk = c.academicWeeklyMarks[c.changeWeek - 1];
                 const normInIncreaseWk = c.normalizedTimeline[c.changeWeek - 1] * 100;
                 const warningsJoined = c.warnings ? c.warnings.join(' | ') : '';
 
