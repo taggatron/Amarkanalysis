@@ -1618,7 +1618,7 @@
         // Process parsed rows
         function processWorkbookData(rows) {
             const statusBadge = document.getElementById('uploadStatus');
-            const targetHeaders = ['SESSION', 'CODE', 'DEPT', 'SECTION', 'COURSE', 'COURSETITLE', 'GROUPDESCRIPTION', 'REPMODE'];
+            const targetHeaders = ['SESSION', 'CODE', 'SESSION CODE', 'DEPT', 'SECTION', 'SECTION_NAME', 'COURSE', 'COURSETITLE', 'GROUPDESCRIPTION', 'REPMODE'];
 
             // Robust header finding: Scan first 15 rows for the one containing key fields
             let bestRowIndex = 2; // Default to row 3 (index 2)
@@ -1669,7 +1669,7 @@
             });
 
             // Check for essential columns
-            const required = ['CODE', 'COURSE', 'COURSETITLE', 'REPMODE'];
+            const required = ['COURSE', 'COURSETITLE', 'REPMODE'];
             const missing = required.filter(col => headerMap[col] === undefined);
             if (missing.length > 0) {
                 statusBadge.className = 'status-badge error';
@@ -1707,18 +1707,26 @@
 
                 ftCount++;
 
-                const getCell = (colName) => {
-                    const idx = headerMap[colName];
-                    return idx !== undefined && row[idx] !== null && row[idx] !== undefined ? row[idx].toString().trim() : '';
+                const getCell = (colNames) => {
+                    if (!Array.isArray(colNames)) {
+                        colNames = [colNames];
+                    }
+                    for (const name of colNames) {
+                        const idx = headerMap[name];
+                        if (idx !== undefined && row[idx] !== null && row[idx] !== undefined) {
+                            return row[idx].toString().trim();
+                        }
+                    }
+                    return '';
                 };
 
-                const session = getCell('SESSION');
-                const code = getCell('CODE');
-                const dept = getCell('DEPT');
-                const section = getCell('SECTION');
-                const course = getCell('COURSE');
-                const courseTitle = getCell('COURSETITLE');
-                const groupDesc = getCell('GROUPDESCRIPTION');
+                const session = getCell(['SESSION', 'SESSION CODE']);
+                const code = getCell(['CODE', 'SESSION CODE', 'COURSE']);
+                const dept = getCell(['DEPT']);
+                const section = getCell(['SECTION', 'SECTION_NAME', 'DEPT']);
+                const course = getCell(['COURSE', 'CODE']);
+                const courseTitle = getCell(['COURSETITLE']);
+                const groupDesc = getCell(['GROUPDESCRIPTION']);
 
                 // Extract weekly numbers
                 const weeklyMarks = [];
