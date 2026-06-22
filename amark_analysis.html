@@ -531,7 +531,7 @@
             gap: 1.5rem;
         }
 
-        @media (min-width: 1200px) {
+        @media (min-width: 1024px) {
             .dashboard-layout {
                 grid-template-columns: 55% 45%;
             }
@@ -719,6 +719,12 @@
             border: 1px solid rgba(239, 68, 68, 0.2);
         }
 
+        .conf-badge.none {
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--text-secondary);
+            border: 1px solid var(--card-border);
+        }
+
         .week-badge {
             background: rgba(255, 255, 255, 0.08);
             padding: 0.15rem 0.4rem;
@@ -853,7 +859,7 @@
             gap: 1.5rem;
         }
 
-        @media (min-width: 1200px) {
+        @media (min-width: 1024px) {
             .distribution-layout {
                 grid-template-columns: 45% 55%;
             }
@@ -1131,18 +1137,13 @@
                     <!-- Results Table Card -->
                     <div class="dashboard-card">
                         <div class="card-header">
-                            <h3 class="card-title">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                                    style="stroke: var(--primary-light);">
-                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                                    <line x1="9" y1="9" x2="15" y2="9"></line>
-                                    <line x1="9" y1="13" x2="15" y2="13"></line>
-                                    <line x1="9" y1="17" x2="15" y2="17"></line>
-                                </svg>
-                                Flagged Courses
-                            </h3>
+                            <h3 class="card-title" id="cardTitleText">Flagged Courses</h3>
                             <div class="card-actions">
+                                <select id="filterFlagged" class="number-input" style="width: 130px;" onchange="renderResultsTable()">
+                                    <option value="FLAGGED">Flagged Only</option>
+                                    <option value="ALL">All Courses</option>
+                                    <option value="UNFLAGGED">Unflagged Only</option>
+                                </select>
                                 <select id="filterConfidence" class="number-input" style="width: 110px;"
                                     onchange="renderResultsTable()">
                                     <option value="ALL">All Confidences</option>
@@ -1159,6 +1160,17 @@
                                         <line x1="12" y1="15" x2="12" y2="3"></line>
                                     </svg> Export CSV
                                 </button>
+                            </div>
+                        </div>
+
+                        <!-- Overview Ratio Progress Bar -->
+                        <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; padding: 0.75rem 1rem; display: flex; flex-direction: column; gap: 0.4rem;">
+                            <div class="flex-between" style="font-size: 0.8rem;">
+                                <span style="font-weight: 600; color: var(--text-secondary);">Courses Flagged Ratio</span>
+                                <span id="overviewProgressBarText" style="color: var(--secondary); font-weight: 700; font-family: monospace;">0 / 0 (0.0%)</span>
+                            </div>
+                            <div style="width: 100%; height: 6px; background: rgba(255,255,255,0.08); border-radius: 3px; overflow: hidden; display: flex;">
+                                <div id="overviewProgressBarFlagged" style="width: 0%; height: 100%; background: linear-gradient(to right, var(--primary), var(--secondary)); transition: width 0.4s ease;"></div>
                             </div>
                         </div>
 
@@ -1385,6 +1397,7 @@
         // State Variables
         let rawData = null;
         let flaggedCourses = [];
+        let processedCourses = [];
         let weekDistribution = [];
 
         // UI Table Settings
@@ -1749,6 +1762,7 @@
                 }
 
                 courses.push({
+                    id: courses.length,
                     session,
                     code,
                     dept,
@@ -1795,6 +1809,7 @@
             const pExamEnd = parseInt(document.getElementById('examEnd').value);
 
             flaggedCourses = [];
+            processedCourses = [];
 
             // Reset section selection options list
             const uniqueSections = new Set();
@@ -1804,8 +1819,24 @@
                 const maxA = course.maxWeeklyAMarks;
                 uniqueSections.add(course.section || 'Unknown');
 
-                // Skip courses with zero total absences
+                // If course has zero absences, store in processedCourses as unflagged
                 if (maxA <= 0) {
+                    processedCourses.push({
+                        id: course.id,
+                        ...course,
+                        isFlagged: false,
+                        changeWeek: null,
+                        highProportionWeek: null,
+                        maxWeek: 1,
+                        changeScore: 0,
+                        avgBefore: 0,
+                        avgAfter: 0,
+                        avgEnd: 0,
+                        confidence: 'NONE',
+                        reason: 'No absences recorded for this course throughout the academic year.',
+                        warnings: [],
+                        normalizedTimeline: Array(52).fill(0)
+                    });
                     return;
                 }
 
@@ -1964,8 +1995,10 @@
                         }
                     }
 
-                    flaggedCourses.push({
+                    const flaggedItem = {
+                        id: course.id,
                         ...course,
+                        isFlagged: true,
                         changeWeek,
                         highProportionWeek,
                         maxWeek,
@@ -1976,6 +2009,25 @@
                         confidence,
                         reason: reasons.join(' '),
                         warnings: warnings,
+                        normalizedTimeline: P
+                    };
+                    flaggedCourses.push(flaggedItem);
+                    processedCourses.push(flaggedItem);
+                } else {
+                    processedCourses.push({
+                        id: course.id,
+                        ...course,
+                        isFlagged: false,
+                        changeWeek: null,
+                        highProportionWeek: null,
+                        maxWeek,
+                        changeScore: 0,
+                        avgBefore: 0,
+                        avgAfter: 0,
+                        avgEnd: P.slice(49).reduce((a, b) => a + b, 0) / 3,
+                        confidence: 'NONE',
+                        reason: 'No dramatic step-up or sustained increase in academic absences detected.',
+                        warnings: [],
                         normalizedTimeline: P
                     });
                 }
@@ -2010,17 +2062,19 @@
             renderResultsTable();
 
             // 8. Select first course by default to visualize if available
-            if (flaggedCourses.length > 0) {
+            if (processedCourses.length > 0) {
                 document.getElementById('resultsEmptyState').style.display = 'none';
                 document.getElementById('resultsDashboard').style.display = 'grid';
                 document.getElementById('analyticsEmptyState').style.display = 'none';
                 document.getElementById('analyticsDashboard').style.display = 'grid';
 
                 // Select first filtered row
-                const firstFlagged = getFilteredCourses()[0];
-                if (firstFlagged) {
-                    const idx = flaggedCourses.findIndex(c => c.code === firstFlagged.code);
+                const filtered = getFilteredCourses();
+                if (filtered.length > 0) {
+                    const idx = processedCourses.findIndex(c => c.id === filtered[0].id);
                     selectCourse(idx);
+                } else {
+                    selectCourse(0);
                 }
             } else {
                 showNoFlaggedState();
@@ -2052,6 +2106,14 @@
 
             const flagRate = rawData.ftCount > 0 ? (flaggedCourses.length / rawData.ftCount) * 100 : 0;
             document.getElementById('kpiFlaggedRate').innerText = `${flagRate.toFixed(1)}% of FT courses`;
+
+            // Update visual progress bar
+            const barText = document.getElementById('overviewProgressBarText');
+            const barDiv = document.getElementById('overviewProgressBarFlagged');
+            if (barText && barDiv) {
+                barText.innerText = `${flaggedCourses.length} / ${rawData.ftCount} (${flagRate.toFixed(1)}%)`;
+                barDiv.style.width = `${flagRate}%`;
+            }
 
             // Find week with most flags
             let maxCount = -1;
@@ -2094,7 +2156,16 @@
 
         // Filter, search, and sort helper
         function getFilteredCourses() {
-            let list = [...flaggedCourses];
+            const filterFlaggedVal = document.getElementById('filterFlagged') ? document.getElementById('filterFlagged').value : 'FLAGGED';
+            
+            let list = [];
+            if (filterFlaggedVal === 'FLAGGED') {
+                list = processedCourses.filter(c => c.isFlagged);
+            } else if (filterFlaggedVal === 'UNFLAGGED') {
+                list = processedCourses.filter(c => !c.isFlagged);
+            } else {
+                list = [...processedCourses];
+            }
 
             // Search
             if (searchFilter) {
@@ -2107,7 +2178,7 @@
                 );
             }
 
-            // Confidence filter
+            // Confidence filter (only applies to flagged ones)
             if (confidenceFilter !== 'ALL') {
                 list = list.filter(c => c.confidence === confidenceFilter);
             }
@@ -2119,7 +2190,7 @@
 
                 // Map confidence to numeric scores for proper sorting
                 if (sortColumn === 'confidence') {
-                    const scores = { 'HIGH': 3, 'MEDIUM': 2, 'LOW': 1 };
+                    const scores = { 'HIGH': 3, 'MEDIUM': 2, 'LOW': 1, 'NONE': 0 };
                     valA = scores[a.confidence] || 0;
                     valB = scores[b.confidence] || 0;
                 }
@@ -2164,6 +2235,12 @@
         function renderResultsTable() {
             searchFilter = document.getElementById('searchInput').value;
             confidenceFilter = document.getElementById('filterConfidence').value;
+            const filterFlaggedVal = document.getElementById('filterFlagged') ? document.getElementById('filterFlagged').value : 'FLAGGED';
+
+            const titleEl = document.getElementById('cardTitleText');
+            if (titleEl) {
+                titleEl.innerText = filterFlaggedVal === 'FLAGGED' ? 'Flagged Courses' : filterFlaggedVal === 'UNFLAGGED' ? 'Unflagged Courses' : 'All Courses Overview';
+            }
 
             const filtered = getFilteredCourses();
             const totalItems = filtered.length;
@@ -2174,7 +2251,8 @@
             const startIdx = (currentPage - 1) * rowsPerPage;
             const pageItems = filtered.slice(startIdx, startIdx + rowsPerPage);
 
-            document.getElementById('tableCountText').innerText = `Showing ${filtered.length} of ${flaggedCourses.length} courses`;
+            const totalDisplayCount = filterFlaggedVal === 'FLAGGED' ? flaggedCourses.length : filterFlaggedVal === 'UNFLAGGED' ? (processedCourses.length - flaggedCourses.length) : processedCourses.length;
+            document.getElementById('tableCountText').innerText = `Showing ${filtered.length} of ${totalDisplayCount} courses`;
 
             const tbody = document.getElementById('coursesTableBody');
             tbody.innerHTML = '';
@@ -2188,8 +2266,7 @@
 
             pageItems.forEach(c => {
                 const tr = document.createElement('tr');
-                // Check if this row represents the selected course
-                const actualIdx = flaggedCourses.findIndex(fc => fc.code === c.code);
+                const actualIdx = processedCourses.findIndex(fc => fc.id === c.id);
                 if (actualIdx === selectedCourseIndex) {
                     tr.className = 'selected';
                 }
@@ -2197,14 +2274,16 @@
                 tr.onclick = () => selectCourse(actualIdx);
 
                 const confClass = c.confidence.toLowerCase();
+                const changeWkText = c.isFlagged ? `Week ${c.changeWeek}` : 'N/A';
+                const badgeLabel = c.isFlagged ? c.confidence : 'UNFLAGGED';
 
                 tr.innerHTML = `
                 <td><strong>${c.code}</strong></td>
                 <td><div style="font-weight: 500; max-width: 240px; overflow: hidden; text-overflow: ellipsis;" title="${c.courseTitle}">${c.courseTitle}</div></td>
                 <td><div style="max-width: 140px; overflow: hidden; text-overflow: ellipsis;">${c.section || 'N/A'}</div></td>
-                <td style="text-align: center;"><span class="week-badge">Week ${c.changeWeek}</span></td>
+                <td style="text-align: center;"><span class="week-badge">${changeWkText}</span></td>
                 <td style="text-align: center;"><strong>${c.maxWeeklyAMarks}</strong></td>
-                <td><span class="conf-badge ${confClass}">${c.confidence}</span></td>
+                <td><span class="conf-badge ${confClass}">${badgeLabel}</span></td>
             `;
                 tbody.appendChild(tr);
             });
@@ -2248,14 +2327,13 @@
 
         // Selected Course Visualizer Details
         function selectCourse(idx) {
-            if (idx === null || idx < 0 || idx >= flaggedCourses.length) return;
+            if (idx === null || idx < 0 || idx >= processedCourses.length) return;
             selectedCourseIndex = idx;
 
             // Redraw table page to highlight selected row
-            const prevPage = currentPage;
             renderResultsTable();
 
-            const course = flaggedCourses[idx];
+            const course = processedCourses[idx];
 
             document.getElementById('detailIntro').style.display = 'none';
             document.getElementById('detailData').style.display = 'flex';
@@ -2265,28 +2343,43 @@
             document.getElementById('detailSection').innerText = course.section || 'Unknown';
             document.getElementById('detailGroup').innerText = course.groupDesc || 'N/A';
             document.getElementById('detailMaxA').innerText = `${course.maxWeeklyAMarks} (Week ${course.maxWeek})`;
-            document.getElementById('detailIncreaseWk').innerText = `Week ${course.changeWeek} (${course.weeklyMarks[course.changeWeek - 1]} A)`;
-            document.getElementById('detailChangeScore').innerText = `+${(course.changeScore * 100).toFixed(0)}%`;
+            
+            if (course.isFlagged) {
+                document.getElementById('detailIncreaseWk').innerText = `Week ${course.changeWeek} (${course.weeklyMarks[course.changeWeek - 1]} A)`;
+                document.getElementById('detailChangeScore').innerText = `+${(course.changeScore * 100).toFixed(0)}%`;
 
-            const confBadge = document.getElementById('detailConfRating');
-            confBadge.className = `conf-badge ${course.confidence.toLowerCase()}`;
-            confBadge.innerText = course.confidence;
+                const confBadge = document.getElementById('detailConfRating');
+                confBadge.className = `conf-badge ${course.confidence.toLowerCase()}`;
+                confBadge.innerText = course.confidence;
 
-            document.getElementById('detailReasonText').innerText = course.reason;
+                document.getElementById('detailReasonText').innerText = course.reason;
+                
+                // Warnings trigger
+                const wContainer = document.getElementById('detailWarningsContainer');
+                const wList = document.getElementById('detailWarningsList');
+                wList.innerHTML = '';
 
-            // Warning triggers
-            const wContainer = document.getElementById('detailWarningsContainer');
-            const wList = document.getElementById('detailWarningsList');
-            wList.innerHTML = '';
-
-            if (course.warnings && course.warnings.length > 0) {
-                course.warnings.forEach(w => {
-                    const li = document.createElement('li');
-                    li.innerText = w;
-                    wList.appendChild(li);
-                });
-                wContainer.style.display = 'block';
+                if (course.warnings && course.warnings.length > 0) {
+                    course.warnings.forEach(w => {
+                        const li = document.createElement('li');
+                        li.innerText = w;
+                        wList.appendChild(li);
+                    });
+                    wContainer.style.display = 'block';
+                } else {
+                    wContainer.style.display = 'none';
+                }
             } else {
+                document.getElementById('detailIncreaseWk').innerText = 'N/A';
+                document.getElementById('detailChangeScore').innerText = 'N/A';
+
+                const confBadge = document.getElementById('detailConfRating');
+                confBadge.className = 'conf-badge none';
+                confBadge.innerText = 'UNFLAGGED';
+
+                document.getElementById('detailReasonText').innerText = course.reason;
+                
+                const wContainer = document.getElementById('detailWarningsContainer');
                 wContainer.style.display = 'none';
             }
 
@@ -2304,7 +2397,7 @@
         // Detail Chart creation using Chart.js
         function drawDetailChart() {
             if (selectedCourseIndex === null) return;
-            const course = flaggedCourses[selectedCourseIndex];
+            const course = processedCourses[selectedCourseIndex];
             const ctx = document.getElementById('courseDetailChart').getContext('2d');
 
             if (detailChart) {
@@ -2330,7 +2423,7 @@
             }
 
             // Draw annotation lines for Change Week and Max Week
-            const changeWk = course.changeWeek;
+            const changeWk = course.isFlagged ? course.changeWeek : -1;
             const maxWk = course.maxWeek;
 
             detailChart = new Chart(ctx, {
