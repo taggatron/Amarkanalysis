@@ -2799,9 +2799,13 @@
 
                 borders.forEach(b => {
                     const labelVal = chart.data.labels[b.idx];
-                    // Convert labelVal to String because Chart.js CategoryScale internally stores labels as strings.
-                    // Strict lookup (indexOf) will return -1 (resulting in NaN) if queried with a number.
-                    let xPos = x.getPixelForValue(String(labelVal));
+                    // Try numeric lookup first (if labels are stored as numbers)
+                    let xPos = x.getPixelForValue(labelVal);
+                    // If NaN, try stringified lookup (if category scale converted them to strings)
+                    if (isNaN(xPos) || xPos === undefined || xPos < left || xPos > right) {
+                        xPos = x.getPixelForValue(String(labelVal));
+                    }
+                    // If still NaN, fall back to index-based resolution
                     if (isNaN(xPos) || xPos === undefined || xPos < left || xPos > right) {
                         xPos = x.getPixelForValue(null, b.idx);
                     }
@@ -2821,8 +2825,7 @@
             }
         };
 
-        // Register plugin globally
-        Chart.register(termBordersPlugin);
+        // Registered locally in each chart config instead to prevent duplicate registration console errors
 
         // Detail Chart creation using Chart.js (handles both Overview and Course Specific trends)
         function drawDetailChart() {
