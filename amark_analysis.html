@@ -2412,6 +2412,114 @@
             container.appendChild(next);
         }
 
+        // Selected Course Visualizer Details
+        function clearCourseSelection() {
+            selectCourse(null);
+        }
+
+        function selectCourse(idx) {
+            if (idx === null) {
+                selectedCourseIndex = null;
+                renderResultsTable();
+
+                document.getElementById('detailCourseCode').innerText = 'All Courses Overview';
+                const toggles = document.getElementById('detailChartToggles');
+                if (toggles) toggles.style.display = 'none';
+
+                document.getElementById('detailIntro').style.display = 'flex';
+                document.getElementById('detailData').style.display = 'none';
+
+                // Populate Overview Statistics
+                const totalFT = processedCourses.length;
+                const flagged = flaggedCourses.length;
+                const unflagged = totalFT - flagged;
+                const flagRate = totalFT > 0 ? (flagged / totalFT * 100).toFixed(1) : 0;
+
+                const highCount = flaggedCourses.filter(c => c.confidence === 'HIGH').length;
+                const medLowCount = flaggedCourses.filter(c => c.confidence === 'MEDIUM' || c.confidence === 'LOW').length;
+
+                document.getElementById('overviewTotalCourses').innerText = totalFT;
+                document.getElementById('overviewFlaggedCourses').innerText = flagged;
+                document.getElementById('overviewUnflaggedCourses').innerText = unflagged;
+                document.getElementById('overviewFlaggedRatio').innerText = `${flagged} / ${totalFT} (${flagRate}%)`;
+                document.getElementById('overviewHighConf').innerText = highCount;
+                document.getElementById('overviewMedLowConf').innerText = medLowCount;
+
+                // Draw Overview Chart
+                drawDetailChart();
+                return;
+            }
+
+            if (idx < 0 || idx >= processedCourses.length) return;
+            selectedCourseIndex = idx;
+
+            // Redraw table page to highlight selected row
+            renderResultsTable();
+
+            const course = processedCourses[idx];
+
+            document.getElementById('detailCourseCode').innerText = course.code;
+            const toggles = document.getElementById('detailChartToggles');
+            if (toggles) toggles.style.display = 'flex';
+
+            document.getElementById('detailIntro').style.display = 'none';
+            document.getElementById('detailData').style.display = 'flex';
+
+            document.getElementById('detailCourseTitle').innerText = course.courseTitle;
+            document.getElementById('detailSection').innerText = course.section || 'Unknown';
+            document.getElementById('detailGroup').innerText = course.groupDesc || 'N/A';
+            document.getElementById('detailMaxA').innerText = `${course.maxWeeklyAMarks} (Week ${course.maxWeek})`;
+            
+            if (course.isFlagged) {
+                document.getElementById('detailIncreaseWk').innerText = `Week ${course.changeWeek} (${course.weeklyMarks[course.changeWeek - 1]} A)`;
+                document.getElementById('detailChangeScore').innerText = `+${(course.changeScore * 100).toFixed(0)}%`;
+
+                const confBadge = document.getElementById('detailConfRating');
+                confBadge.className = `conf-badge ${course.confidence.toLowerCase()}`;
+                confBadge.innerText = course.confidence;
+
+                document.getElementById('detailReasonText').innerText = course.reason;
+                
+                // Warnings trigger
+                const wContainer = document.getElementById('detailWarningsContainer');
+                const wList = document.getElementById('detailWarningsList');
+                wList.innerHTML = '';
+
+                if (course.warnings && course.warnings.length > 0) {
+                    course.warnings.forEach(w => {
+                        const li = document.createElement('li');
+                        li.innerText = w;
+                        wList.appendChild(li);
+                    });
+                    wContainer.style.display = 'block';
+                } else {
+                    wContainer.style.display = 'none';
+                }
+            } else {
+                document.getElementById('detailIncreaseWk').innerText = 'N/A';
+                document.getElementById('detailChangeScore').innerText = 'N/A';
+
+                const confBadge = document.getElementById('detailConfRating');
+                confBadge.className = 'conf-badge none';
+                confBadge.innerText = 'UNFLAGGED';
+
+                document.getElementById('detailReasonText').innerText = course.reason;
+                
+                const wContainer = document.getElementById('detailWarningsContainer');
+                wContainer.style.display = 'none';
+            }
+
+            // Draw Chart
+            drawDetailChart();
+        }
+
+        function toggleDetailChartMode(mode) {
+            detailChartMode = mode;
+            document.getElementById('btnChartRaw').classList.toggle('active', mode === 'RAW');
+            document.getElementById('btnChartNorm').classList.toggle('active', mode === 'NORM');
+            drawDetailChart();
+        }
+
         // Detail Chart creation using Chart.js (handles both Overview and Course Specific trends)
         function drawDetailChart() {
             const ctx = document.getElementById('courseDetailChart').getContext('2d');
