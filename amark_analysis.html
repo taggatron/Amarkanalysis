@@ -1032,9 +1032,9 @@
                 <div class="form-group">
                     <div class="label-row">
                         <span>Analysis Cutoff Week</span>
-                        <span class="val-badge" id="valCutoffWeek">46</span>
+                        <span class="val-badge" id="valCutoffWeek">34</span>
                     </div>
-                    <input type="range" id="cutoffWeek" min="1" max="52" value="46" oninput="updateValBadge(this)">
+                    <input type="range" id="cutoffWeek" min="1" max="40" value="34" oninput="updateValBadge(this)">
                 </div>
 
                 <!-- Exam Cautious Toggle -->
@@ -1049,11 +1049,11 @@
                 <div class="form-row" id="examWeeksContainer">
                     <div class="form-group">
                         <div class="label-row"><span style="font-size: 0.75rem;">Exam Start Week</span></div>
-                        <input type="number" id="examStart" class="number-input" min="1" max="52" value="30">
+                        <input type="number" id="examStart" class="number-input" min="1" max="40" value="21">
                     </div>
                     <div class="form-group">
                         <div class="label-row"><span style="font-size: 0.75rem;">Exam End Week</span></div>
-                        <input type="number" id="examEnd" class="number-input" min="1" max="52" value="36">
+                        <input type="number" id="examEnd" class="number-input" min="1" max="40" value="26">
                     </div>
                 </div>
             </div>
@@ -1446,6 +1446,24 @@
             37: 'Easter',
             43: 'May Half Term'
         };
+
+        // Generate academic to calendar mappings
+        const ACADEMIC_TO_CALENDAR = []; // 0-indexed academic week -> 1-based calendar week
+        const CALENDAR_TO_ACADEMIC = {}; // 1-based calendar week -> 1-based academic week (or null if holiday/pre-term)
+
+        let currentAcadWeek = 1;
+        for (let c = 1; c <= 52; c++) {
+            if (c < 6) {
+                CALENDAR_TO_ACADEMIC[c] = null;
+            } else if (HOLIDAY_WEEKS[c]) {
+                CALENDAR_TO_ACADEMIC[c] = null;
+            } else {
+                CALENDAR_TO_ACADEMIC[c] = currentAcadWeek;
+                ACADEMIC_TO_CALENDAR.push(c);
+                currentAcadWeek++;
+            }
+        }
+
 
         // State Variables
         let rawData = null;
@@ -1860,7 +1878,15 @@
             const pCautiousExam = document.getElementById('cautiousExam').checked;
             const pExamStart = parseInt(document.getElementById('examStart').value);
             const pExamEnd = parseInt(document.getElementById('examEnd').value);
-            const pCutoffWeek = document.getElementById('cutoffWeek') ? parseInt(document.getElementById('cutoffWeek').value) : 46;
+            const pCutoffWeek = document.getElementById('cutoffWeek') ? parseInt(document.getElementById('cutoffWeek').value) : 34;
+
+            // Compute/ensure academic mappings for all courses
+            rawData.courses.forEach(course => {
+                course.academicWeeklyMarks = ACADEMIC_TO_CALENDAR.map(calWeek => course.weeklyMarks[calWeek - 1]);
+                course.maxWeeklyAMarks = Math.max(...course.academicWeeklyMarks);
+                course.totalAMarks = course.academicWeeklyMarks.reduce((a, b) => a + b, 0);
+                course.hasNonZero = course.academicWeeklyMarks.some(v => v > 0);
+            });
 
             flaggedCourses = [];
             processedCourses = [];
@@ -1872,10 +1898,9 @@
             rawData.courses.forEach(course => {
                 uniqueSections.add(course.section || 'Unknown');
 
-                // Calculate maxWeeklyAMarks excluding holidays and up to cutoff week
-                const activeWeeksMarks = course.weeklyMarks.slice(0, pCutoffWeek);
-                const nonHolidayMarks = activeWeeksMarks.filter((_, idx) => !HOLIDAY_WEEKS[idx + 1]);
-                const maxA = nonHolidayMarks.length > 0 ? Math.max(...nonHolidayMarks) : Math.max(...activeWeeksMarks);
+                // Calculate maxWeeklyAMarks up to cutoff week (in academic weeks)
+                const activeAcademicMarks = course.academicWeeklyMarks.slice(0, pCutoffWeek);
+                const maxA = activeAcademicMarks.length > 0 ? Math.max(...activeAcademicMarks) : 0;
                 
                 // Override maxWeeklyAMarks for consistency
                 course.maxWeeklyAMarks = maxA;
@@ -1894,48 +1919,38 @@
                         avgAfter: 0,
                         avgEnd: 0,
                         confidence: 'NONE',
-                        reason: 'No absences recorded (excluding holidays, up to cutoff week) for this course.',
+                        reason: 'No absences recorded up to cutoff week for this course.',
                         warnings: [],
-                        normalizedTimeline: Array(52).fill(0)
+                        normalizedTimeline: Array(40).fill(0)
                     });
                     return;
                 }
 
-                // Generate normalized percentage timeline (future weeks set to 0)
-                const P = course.weeklyMarks.map((val, idx) => {
+                // Generate normalized percentage timeline (future academic weeks set to 0)
+                const P = course.academicWeeklyMarks.map((val, idx) => {
                     if (idx >= pCutoffWeek) return 0;
                     return val / maxA;
                 });
 
-                // Find week of maximum A marks (excluding holidays, up to pCutoffWeek)
+                // Find week of maximum A marks (up to pCutoffWeek)
                 let maxWeek = 1;
                 let currentMax = -1;
                 for (let w = 0; w < pCutoffWeek; w++) {
-                    if (HOLIDAY_WEEKS[w + 1]) continue; // Skip holidays!
-                    if (course.weeklyMarks[w] > currentMax) {
-                        currentMax = course.weeklyMarks[w];
-                        maxWeek = w + 1;
+                    if (course.academicWeeklyMarks[w] > currentMax) {
+                        currentMax = course.academicWeeklyMarks[w];
+                        maxWeek = w + 1; // 1-based academic week
                     }
                 }
                 if (currentMax === -1) {
-                    maxWeek = course.weeklyMarks.slice(0, pCutoffWeek).indexOf(Math.max(...activeWeeksMarks)) + 1;
+                    maxWeek = activeAcademicMarks.indexOf(Math.max(...activeAcademicMarks)) + 1;
                 }
 
-                // Find the high proportion week (excluding holidays, up to pCutoffWeek)
+                // Find the high proportion week (up to pCutoffWeek)
                 let highProportionWeek = -1;
                 for (let w = 0; w < pCutoffWeek; w++) {
-                    if (HOLIDAY_WEEKS[w + 1]) continue; // Skip holidays!
                     if (P[w] >= pEarlyFinishLevel) {
-                        highProportionWeek = w + 1;
+                        highProportionWeek = w + 1; // 1-based academic week
                         break;
-                    }
-                }
-                if (highProportionWeek === -1) {
-                    for (let w = 0; w < pCutoffWeek; w++) {
-                        if (P[w] >= pEarlyFinishLevel) {
-                            highProportionWeek = w + 1;
-                            break;
-                        }
                     }
                 }
 
@@ -1946,45 +1961,32 @@
                 let avgAfter = 0;
 
                 for (let i = pBaseline; i <= pCutoffWeek - pComparison; i++) {
-                    // Calculate average before change-point (skipping holidays)
+                    // Calculate average before change-point (in academic weeks)
                     let sumB = 0;
-                    let countB = 0;
                     for (let j = i - pBaseline; j < i; j++) {
-                        const wNum = j + 1;
-                        if (HOLIDAY_WEEKS[wNum]) continue; // Skip holidays!
                         sumB += P[j];
-                        countB++;
                     }
-                    const localAvgBefore = countB > 0 ? sumB / countB : 0;
+                    const localAvgBefore = sumB / pBaseline;
 
-                    // Calculate average after change-point (skipping holidays)
+                    // Calculate average after change-point (in academic weeks)
                     let sumA = 0;
-                    let countA = 0;
                     for (let j = i; j < i + pComparison; j++) {
-                        const wNum = j + 1;
-                        if (HOLIDAY_WEEKS[wNum]) continue; // Skip holidays!
                         sumA += P[j];
-                        countA++;
                     }
-                    const localAvgAfter = countA > 0 ? sumA / countA : 0;
+                    const localAvgAfter = sumA / pComparison;
                     const localChangeScore = localAvgAfter - localAvgBefore;
 
                     // Check if threshold rules are met
                     if (localChangeScore >= pRequiredIncrease && localAvgAfter >= pRequiredAvgAfter) {
-                        // Check sustained weeks criteria (skipping holidays)
+                        // Check sustained weeks criteria
                         let sustainedCount = 0;
-                        let validWeeks = 0;
                         for (let j = i; j < i + pComparison; j++) {
-                            const wNum = j + 1;
-                            if (HOLIDAY_WEEKS[wNum]) continue; // Skip holidays!
-                            validWeeks++;
                             if (P[j] >= pSustainedLevel) {
                                 sustainedCount++;
                             }
                         }
 
-                        const adjustedMinSustained = Math.ceil(pMinSustained * (validWeeks / pComparison));
-                        if (sustainedCount >= adjustedMinSustained && validWeeks > 0) {
+                        if (sustainedCount >= pMinSustained) {
                             // Flag found! Record the first occurrence
                             changeWeekIdx = i;
                             changeScore = localChangeScore;
@@ -2000,7 +2002,7 @@
                 let endCount = 0;
                 const endWeeks = [pCutoffWeek - 2, pCutoffWeek - 1, pCutoffWeek];
                 endWeeks.forEach(wNum => {
-                    if (wNum > 0 && wNum <= 52 && !HOLIDAY_WEEKS[wNum]) {
+                    if (wNum > 0 && wNum <= 40) {
                         endSum += P[wNum - 1];
                         endCount++;
                     }
@@ -2009,24 +2011,20 @@
 
                 // If change week is flagged, perform safeguard analysis and confidence logic
                 if (changeWeekIdx !== -1) {
-                    const changeWeek = changeWeekIdx + 1; // 1-based index
+                    const changeWeek = changeWeekIdx + 1; // 1-based index (academic week)
 
-                    // Track drop backs after the comparison window up to pCutoffWeek (skipping holidays)
+                    // Track drop backs after the comparison window up to pCutoffWeek
                     let weeksBelow30 = 0;
                     for (let t = changeWeekIdx + pComparison; t < pCutoffWeek; t++) {
-                        const wNum = t + 1;
-                        if (HOLIDAY_WEEKS[wNum]) continue; // Skip holidays!
                         if (P[t] < 0.30) {
                             weeksBelow30++;
                         }
                     }
 
-                    // State-crossing to detect multiple spikes up to pCutoffWeek (skipping holidays)
+                    // State-crossing to detect multiple spikes up to pCutoffWeek
                     let stateCrossings = 0;
                     let state = 'LOW';
                     for (let t = 0; t < pCutoffWeek; t++) {
-                        const wNum = t + 1;
-                        if (HOLIDAY_WEEKS[wNum]) continue; // Skip holidays!
                         if (state === 'LOW' && P[t] >= 0.60) {
                             stateCrossings++;
                             state = 'HIGH';
@@ -2055,10 +2053,10 @@
                     let reasons = [];
                     let warnings = [];
 
-                    reasons.push(`Absences jumped by ${(changeScore * 100).toFixed(0)}% in week ${changeWeek}.`);
+                    reasons.push(`Absences jumped by ${(changeScore * 100).toFixed(0)}% in Academic Week ${changeWeek}.`);
 
                     // Cautious conditions
-                    const isLateStart = changeWeek >= 47; // Week 47 onwards
+                    const isLateStart = changeWeek >= 35; // Academic Week 35 onwards (matches calendar week 47)
                     const inExamPeriod = pCautiousExam && (changeWeek >= pExamStart && changeWeek <= pExamEnd);
                     const hasDropbacks = weeksBelow30 > 0;
                     const lowMaxA = maxA < 3;
@@ -2072,13 +2070,13 @@
                         reasons.push(`Sustained average of ${(avgEnd * 100).toFixed(0)}% at the end of the year.`);
 
                         if (weeksBelow30 > 0 && weeksBelow30 <= 2) {
-                            warnings.push(`Absence briefly dropped back down (${weeksBelow30} week${weeksBelow30 > 1 ? 's' : ''} below 30% after week ${changeWeek + pComparison}), hinting at minor scheduling adjustments.`);
+                            warnings.push(`Absence briefly dropped back down (${weeksBelow30} week${weeksBelow30 > 1 ? 's' : ''} below 30% after Academic Week ${changeWeek + pComparison}), hinting at minor scheduling adjustments.`);
                         }
                         if (lowMaxA) {
                             warnings.push(`Small student volume (Max of ${maxA} A-marks in a single week), making the analysis sensitive to minor individual fluctuations.`);
                         }
                         if (inExamPeriod) {
-                            warnings.push(`The change-point week falls directly in the academic exam period (Weeks ${pExamStart}-${pExamEnd}), which is highly prone to revision study leave.`);
+                            warnings.push(`The change-point week falls directly in the academic exam period (Academic Weeks ${pExamStart}-${pExamEnd}), which is highly prone to revision study leave.`);
                         }
                         if (isExamSubject) {
                             warnings.push("Subject title matching GCSE/English/Maths keywords, commonly subjected to exam absence timetabling.");
@@ -2094,10 +2092,10 @@
                                 warnings.push(`Final week absences averaged only ${(avgEnd * 100).toFixed(0)}%, showing a return to baseline attendance.`);
                             }
                             if (isLateStart) {
-                                warnings.push(`The pattern began very late (Week ${changeWeek}), representing standard end-of-year scheduling rather than early completion.`);
+                                warnings.push(`The pattern began very late (Academic Week ${changeWeek}), representing standard end-of-year scheduling rather than early completion.`);
                             }
                             if (stateCrossings >= 2) {
-                                warnings.push("Multiple separate absence spikes observed across the year, suggesting cyclical activities (e.g. blok-delivery, work placements).");
+                                warnings.push("Multiple separate absence spikes observed across the year, suggesting cyclical activities (e.g. block-delivery, work placements).");
                             }
                         }
                     }
@@ -2184,10 +2182,10 @@
 
         function calculateWeeklyDistribution() {
             weekDistribution = [];
-            const pCutoffWeek = document.getElementById('cutoffWeek') ? parseInt(document.getElementById('cutoffWeek').value) : 46;
+            const pCutoffWeek = document.getElementById('cutoffWeek') ? parseInt(document.getElementById('cutoffWeek').value) : 34;
             const totalFT = rawData.courses.length;
 
-            for (let w = 1; w <= 52; w++) {
+            for (let w = 1; w <= 40; w++) {
                 if (w > pCutoffWeek) continue; // Skip future weeks in distribution summary
                 const count = flaggedCourses.filter(c => c.changeWeek === w).length;
                 const pctOfFlagged = flaggedCourses.length > 0 ? (count / flaggedCourses.length) * 100 : 0;
