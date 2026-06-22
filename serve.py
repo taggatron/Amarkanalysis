@@ -25,7 +25,24 @@ while PORT < 8080:
     except socket.error:
         PORT += 1
 
+import urllib.parse
+
 class QuietHandler(http.server.SimpleHTTPRequestHandler):
+    def do_GET(self):
+        parsed_url = urllib.parse.urlparse(self.path)
+        if parsed_url.path == '/log':
+            query = urllib.parse.parse_qs(parsed_url.query)
+            msg = query.get('msg', [''])[0]
+            with open('debug_log.txt', 'a') as f:
+                f.write(msg + '\n')
+            self.send_response(200)
+            self.send_header('Content-type', 'text/plain')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            self.wfile.write(b"OK")
+            return
+        super().do_GET()
+
     def log_message(self, format, *args):
         pass  # Silence terminal request logs
 

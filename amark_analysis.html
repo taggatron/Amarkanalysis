@@ -2537,12 +2537,13 @@
         // Custom plugin to draw term boundaries (Pre-Easter at Week 26, Pre-May at Week 31)
         const termBordersPlugin = {
             id: 'termBorders',
-            beforeDraw(chart) {
-                const { ctx, chartArea: { top, bottom, left, right }, scales: { x } } = chart;
-                if (!x) return;
+            afterDatasetsDraw(chart) {
+                const { ctx, chartArea, scales: { x } } = chart;
+                if (!x || !chartArea || !chart.data.labels || chart.data.labels.length !== 40) return;
 
+                const { top, bottom, left, right } = chartArea;
                 ctx.save();
-                ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)'; // Subtle vertical dashed line
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)'; // Semi-transparent crisp white (0.45 opacity)
                 ctx.lineWidth = 1.2;
                 ctx.setLineDash([5, 5]);
 
@@ -2552,14 +2553,20 @@
                 ];
 
                 borders.forEach(b => {
-                    const xPos = x.getPixelForTick(b.idx);
+                    const labelVal = chart.data.labels[b.idx];
+                    // Convert labelVal to String because Chart.js CategoryScale internally stores labels as strings.
+                    // Strict lookup (indexOf) will return -1 (resulting in NaN) if queried with a number.
+                    let xPos = x.getPixelForValue(String(labelVal));
+                    if (isNaN(xPos) || xPos === undefined || xPos < left || xPos > right) {
+                        xPos = x.getPixelForValue(null, b.idx);
+                    }
                     if (xPos >= left && xPos <= right) {
                         ctx.beginPath();
                         ctx.moveTo(xPos, top);
                         ctx.lineTo(xPos, bottom);
                         ctx.stroke();
 
-                        ctx.fillStyle = '#9c97b5';
+                        ctx.fillStyle = '#a5a1b8';
                         ctx.font = '9px Outfit, sans-serif';
                         ctx.textAlign = 'right';
                         ctx.fillText(b.label, xPos - 5, top + 12);
@@ -2568,6 +2575,9 @@
                 ctx.restore();
             }
         };
+
+        // Register plugin globally
+        Chart.register(termBordersPlugin);
 
         // Detail Chart creation using Chart.js (handles both Overview and Course Specific trends)
         function drawDetailChart() {
@@ -2825,8 +2835,7 @@
                                 precision: 0
                             }
                         }
-                    },
-                    plugins: [termBordersPlugin]
+                    }
                 }
             });
 
@@ -2982,9 +2991,9 @@
                                 font: { family: 'Outfit', size: 10 }
                             }
                         }
-                    },
-                    plugins: [termBordersPlugin]
-                }
+                    }
+                },
+                plugins: [termBordersPlugin]
             });
         }
 
