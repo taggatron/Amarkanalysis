@@ -1219,8 +1219,8 @@
                     <!-- Course Detail Panel -->
                     <div class="dashboard-card" id="detailPanel">
                         <div class="card-header">
-                            <h3 class="card-title text-gradient" id="detailCourseCode">Select a Course</h3>
-                            <div class="chart-toggle-group">
+                            <h3 class="card-title text-gradient" id="detailCourseCode">All Courses Overview</h3>
+                            <div class="chart-toggle-group" id="detailChartToggles" style="display: none;">
                                 <button class="chart-toggle-btn active" id="btnChartRaw"
                                     onclick="toggleDetailChartMode('RAW')">Raw A Marks</button>
                                 <button class="chart-toggle-btn" id="btnChartNorm"
@@ -1228,19 +1228,52 @@
                             </div>
                         </div>
 
-                        <div id="detailIntro" class="empty-state">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"
-                                stroke-linecap="round" stroke-linejoin="round">
-                                <line x1="18" y1="20" x2="18" y2="10"></line>
-                                <line x1="12" y1="20" x2="12" y2="4"></line>
-                                <line x1="6" y1="20" x2="6" y2="14"></line>
-                            </svg>
-                            <p>Click on a row in the flagged courses table to inspect its weekly pattern, analysis
-                                findings, and false positive checks.</p>
+                        <!-- 1. Overview Container (Repurposed detailIntro) -->
+                        <div id="detailIntro" style="display: flex; flex-direction: column; gap: 1.25rem;">
+                            <div style="font-weight: 600; font-size: 0.95rem; color: white;">
+                                Overall Absence Trends Across All Courses
+                            </div>
+                            <!-- Overview Meta Grid -->
+                            <div class="detail-meta-grid">
+                                <div class="meta-item">
+                                    <div class="meta-label">Total FT Courses</div>
+                                    <div class="meta-value" id="overviewTotalCourses">-</div>
+                                </div>
+                                <div class="meta-item">
+                                    <div class="meta-label">Flagged Courses</div>
+                                    <div class="meta-value" id="overviewFlaggedCourses" style="color: var(--secondary);">-</div>
+                                </div>
+                                <div class="meta-item">
+                                    <div class="meta-label">Unflagged Courses</div>
+                                    <div class="meta-value" id="overviewUnflaggedCourses" style="color: var(--success);">-</div>
+                                </div>
+                                <div class="meta-item">
+                                    <div class="meta-label">Flagged Ratio</div>
+                                    <div class="meta-value" id="overviewFlaggedRatio">-</div>
+                                </div>
+                                <div class="meta-item">
+                                    <div class="meta-label">High Confidence</div>
+                                    <div class="meta-value" id="overviewHighConf">-</div>
+                                </div>
+                                <div class="meta-item">
+                                    <div class="meta-label">Med / Low Conf</div>
+                                    <div class="meta-value" id="overviewMedLowConf">-</div>
+                                </div>
+                            </div>
+                            
+                            <div class="explanation-box" style="margin-top: 0;">
+                                <strong>Aggregate Trend:</strong> The line chart below displays the average weekly academic absences (A marks) across all courses in the dataset. Use this to identify division-wide trends, and click on individual course rows in the table to drill down.
+                            </div>
                         </div>
 
+                        <!-- 2. Course-Specific Details Container -->
                         <div id="detailData" style="display: none; flex-direction: column; gap: 1.25rem;">
-                            <div style="font-weight: 600; font-size: 0.95rem; color: white;" id="detailCourseTitle">-
+                            <div class="flex-between">
+                                <div style="font-weight: 600; font-size: 0.95rem; color: white; max-width: 60%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" id="detailCourseTitle">-</div>
+                                <button class="btn btn-secondary" onclick="clearCourseSelection()" style="padding: 0.4rem 0.75rem; font-size: 0.75rem; width: auto; display: flex; align-items: center; gap: 0.3rem;">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                                    Overview Trend
+                                </button>
                             </div>
 
                             <!-- Metadata Grid -->
@@ -1283,11 +1316,11 @@
                                     <!-- Dynamic warnings list -->
                                 </ul>
                             </div>
+                        </div>
 
-                            <!-- Graph Canvas -->
-                            <div class="chart-container">
-                                <canvas id="courseDetailChart"></canvas>
-                            </div>
+                        <!-- 3. Shared Line Chart Canvas -->
+                        <div class="chart-container" style="margin-top: auto;">
+                            <canvas id="courseDetailChart"></canvas>
                         </div>
                     </div>
                 </div>
@@ -1394,6 +1427,17 @@
     </div>
 
     <script>
+        // Global Holiday Definition (Skipped in change-point & warning calculations)
+        const HOLIDAY_WEEKS = {
+            13: 'October Half Term',
+            21: 'December Break',
+            22: 'December Break',
+            29: 'February Half Term',
+            36: 'Easter',
+            37: 'Easter',
+            43: 'May Half Term'
+        };
+
         // State Variables
         let rawData = null;
         let flaggedCourses = [];
@@ -1734,7 +1778,7 @@
                 };
 
                 const session = getCell(['SESSION', 'SESSION CODE']);
-                const code = getCell(['CODE', 'SESSION CODE', 'COURSE']);
+                const code = getCell(['CODE', 'COURSE', 'SESSION CODE']);
                 const dept = getCell(['DEPT']);
                 const section = getCell(['SECTION', 'SECTION_NAME', 'DEPT']);
                 const course = getCell(['COURSE', 'CODE']);
@@ -1816,8 +1860,14 @@
 
             // 2. Perform math analysis on each course
             rawData.courses.forEach(course => {
-                const maxA = course.maxWeeklyAMarks;
                 uniqueSections.add(course.section || 'Unknown');
+
+                // Calculate maxWeeklyAMarks excluding holidays
+                const nonHolidayMarks = course.weeklyMarks.filter((_, idx) => !HOLIDAY_WEEKS[idx + 1]);
+                const maxA = nonHolidayMarks.length > 0 ? Math.max(...nonHolidayMarks) : Math.max(...course.weeklyMarks);
+                
+                // Override maxWeeklyAMarks for consistency
+                course.maxWeeklyAMarks = maxA;
 
                 // If course has zero absences, store in processedCourses as unflagged
                 if (maxA <= 0) {
@@ -1833,7 +1883,7 @@
                         avgAfter: 0,
                         avgEnd: 0,
                         confidence: 'NONE',
-                        reason: 'No absences recorded for this course throughout the academic year.',
+                        reason: 'No absences recorded (excluding holidays) for this course throughout the academic year.',
                         warnings: [],
                         normalizedTimeline: Array(52).fill(0)
                     });
@@ -1843,17 +1893,35 @@
                 // Generate normalized percentage timeline
                 const P = course.weeklyMarks.map(val => val / maxA);
 
-                // Find week of maximum A marks
-                // (1-based index of the first occurrence of maximum)
-                const maxWeek = course.weeklyMarks.indexOf(maxA) + 1;
+                // Find week of maximum A marks (excluding holidays)
+                let maxWeek = 1;
+                let currentMax = -1;
+                for (let w = 0; w < 52; w++) {
+                    if (HOLIDAY_WEEKS[w + 1]) continue; // Skip holidays!
+                    if (course.weeklyMarks[w] > currentMax) {
+                        currentMax = course.weeklyMarks[w];
+                        maxWeek = w + 1;
+                    }
+                }
+                if (currentMax === -1) {
+                    maxWeek = course.weeklyMarks.indexOf(Math.max(...course.weeklyMarks)) + 1;
+                }
 
-                // Find the high proportion week
-                // (earliest week where A marks are >= earlyFinishLevel of maxA)
+                // Find the high proportion week (excluding holidays)
                 let highProportionWeek = -1;
                 for (let w = 0; w < 52; w++) {
+                    if (HOLIDAY_WEEKS[w + 1]) continue; // Skip holidays!
                     if (P[w] >= pEarlyFinishLevel) {
                         highProportionWeek = w + 1;
                         break;
+                    }
+                }
+                if (highProportionWeek === -1) {
+                    for (let w = 0; w < 52; w++) {
+                        if (P[w] >= pEarlyFinishLevel) {
+                            highProportionWeek = w + 1;
+                            break;
+                        }
                     }
                 }
 
@@ -1864,32 +1932,45 @@
                 let avgAfter = 0;
 
                 for (let i = pBaseline; i <= 52 - pComparison; i++) {
-                    // Calculate average before change-point
+                    // Calculate average before change-point (skipping holidays)
                     let sumB = 0;
+                    let countB = 0;
                     for (let j = i - pBaseline; j < i; j++) {
+                        const wNum = j + 1;
+                        if (HOLIDAY_WEEKS[wNum]) continue; // Skip holidays!
                         sumB += P[j];
+                        countB++;
                     }
-                    const localAvgBefore = sumB / pBaseline;
+                    const localAvgBefore = countB > 0 ? sumB / countB : 0;
 
-                    // Calculate average after change-point
+                    // Calculate average after change-point (skipping holidays)
                     let sumA = 0;
+                    let countA = 0;
                     for (let j = i; j < i + pComparison; j++) {
+                        const wNum = j + 1;
+                        if (HOLIDAY_WEEKS[wNum]) continue; // Skip holidays!
                         sumA += P[j];
+                        countA++;
                     }
-                    const localAvgAfter = sumA / pComparison;
+                    const localAvgAfter = countA > 0 ? sumA / countA : 0;
                     const localChangeScore = localAvgAfter - localAvgBefore;
 
                     // Check if threshold rules are met
                     if (localChangeScore >= pRequiredIncrease && localAvgAfter >= pRequiredAvgAfter) {
-                        // Check sustained weeks criteria
+                        // Check sustained weeks criteria (skipping holidays)
                         let sustainedCount = 0;
+                        let validWeeks = 0;
                         for (let j = i; j < i + pComparison; j++) {
+                            const wNum = j + 1;
+                            if (HOLIDAY_WEEKS[wNum]) continue; // Skip holidays!
+                            validWeeks++;
                             if (P[j] >= pSustainedLevel) {
                                 sustainedCount++;
                             }
                         }
 
-                        if (sustainedCount >= pMinSustained) {
+                        const adjustedMinSustained = Math.ceil(pMinSustained * (validWeeks / pComparison));
+                        if (sustainedCount >= adjustedMinSustained && validWeeks > 0) {
                             // Flag found! Record the first occurrence
                             changeWeekIdx = i;
                             changeScore = localChangeScore;
@@ -1904,22 +1985,34 @@
                 if (changeWeekIdx !== -1) {
                     const changeWeek = changeWeekIdx + 1; // 1-based index
 
-                    // Track drop backs after the comparison window
+                    // Track drop backs after the comparison window (skipping holidays)
                     let weeksBelow30 = 0;
                     for (let t = changeWeekIdx + pComparison; t < 52; t++) {
+                        const wNum = t + 1;
+                        if (HOLIDAY_WEEKS[wNum]) continue; // Skip holidays!
                         if (P[t] < 0.30) {
                             weeksBelow30++;
                         }
                     }
 
-                    // Average over the final weeks (50, 51, 52)
-                    const endSum = P[49] + P[50] + P[51];
-                    const avgEnd = endSum / 3;
+                    // Average over the final weeks (50, 51, 52) (skipping holidays)
+                    let endSum = 0;
+                    let endCount = 0;
+                    const endWeeks = [50, 51, 52];
+                    endWeeks.forEach(wNum => {
+                        if (!HOLIDAY_WEEKS[wNum]) {
+                            endSum += P[wNum - 1];
+                            endCount++;
+                        }
+                    });
+                    const avgEnd = endCount > 0 ? endSum / endCount : 0;
 
-                    // State-crossing to detect multiple spikes
+                    // State-crossing to detect multiple spikes (skipping holidays)
                     let stateCrossings = 0;
                     let state = 'LOW';
                     for (let t = 0; t < 52; t++) {
+                        const wNum = t + 1;
+                        if (HOLIDAY_WEEKS[wNum]) continue; // Skip holidays!
                         if (state === 'LOW' && P[t] >= 0.60) {
                             stateCrossings++;
                             state = 'HIGH';
@@ -2068,14 +2161,8 @@
                 document.getElementById('analyticsEmptyState').style.display = 'none';
                 document.getElementById('analyticsDashboard').style.display = 'grid';
 
-                // Select first filtered row
-                const filtered = getFilteredCourses();
-                if (filtered.length > 0) {
-                    const idx = processedCourses.findIndex(c => c.id === filtered[0].id);
-                    selectCourse(idx);
-                } else {
-                    selectCourse(0);
-                }
+                // Select Overview mode by default
+                selectCourse(null);
             } else {
                 showNoFlaggedState();
             }
@@ -2325,79 +2412,8 @@
             container.appendChild(next);
         }
 
-        // Selected Course Visualizer Details
-        function selectCourse(idx) {
-            if (idx === null || idx < 0 || idx >= processedCourses.length) return;
-            selectedCourseIndex = idx;
-
-            // Redraw table page to highlight selected row
-            renderResultsTable();
-
-            const course = processedCourses[idx];
-
-            document.getElementById('detailIntro').style.display = 'none';
-            document.getElementById('detailData').style.display = 'flex';
-
-            document.getElementById('detailCourseCode').innerText = course.code;
-            document.getElementById('detailCourseTitle').innerText = course.courseTitle;
-            document.getElementById('detailSection').innerText = course.section || 'Unknown';
-            document.getElementById('detailGroup').innerText = course.groupDesc || 'N/A';
-            document.getElementById('detailMaxA').innerText = `${course.maxWeeklyAMarks} (Week ${course.maxWeek})`;
-            
-            if (course.isFlagged) {
-                document.getElementById('detailIncreaseWk').innerText = `Week ${course.changeWeek} (${course.weeklyMarks[course.changeWeek - 1]} A)`;
-                document.getElementById('detailChangeScore').innerText = `+${(course.changeScore * 100).toFixed(0)}%`;
-
-                const confBadge = document.getElementById('detailConfRating');
-                confBadge.className = `conf-badge ${course.confidence.toLowerCase()}`;
-                confBadge.innerText = course.confidence;
-
-                document.getElementById('detailReasonText').innerText = course.reason;
-                
-                // Warnings trigger
-                const wContainer = document.getElementById('detailWarningsContainer');
-                const wList = document.getElementById('detailWarningsList');
-                wList.innerHTML = '';
-
-                if (course.warnings && course.warnings.length > 0) {
-                    course.warnings.forEach(w => {
-                        const li = document.createElement('li');
-                        li.innerText = w;
-                        wList.appendChild(li);
-                    });
-                    wContainer.style.display = 'block';
-                } else {
-                    wContainer.style.display = 'none';
-                }
-            } else {
-                document.getElementById('detailIncreaseWk').innerText = 'N/A';
-                document.getElementById('detailChangeScore').innerText = 'N/A';
-
-                const confBadge = document.getElementById('detailConfRating');
-                confBadge.className = 'conf-badge none';
-                confBadge.innerText = 'UNFLAGGED';
-
-                document.getElementById('detailReasonText').innerText = course.reason;
-                
-                const wContainer = document.getElementById('detailWarningsContainer');
-                wContainer.style.display = 'none';
-            }
-
-            // Draw Chart
-            drawDetailChart();
-        }
-
-        function toggleDetailChartMode(mode) {
-            detailChartMode = mode;
-            document.getElementById('btnChartRaw').classList.toggle('active', mode === 'RAW');
-            document.getElementById('btnChartNorm').classList.toggle('active', mode === 'NORM');
-            drawDetailChart();
-        }
-
-        // Detail Chart creation using Chart.js
+        // Detail Chart creation using Chart.js (handles both Overview and Course Specific trends)
         function drawDetailChart() {
-            if (selectedCourseIndex === null) return;
-            const course = processedCourses[selectedCourseIndex];
             const ctx = document.getElementById('courseDetailChart').getContext('2d');
 
             if (detailChart) {
@@ -2410,114 +2426,203 @@
             let stepSize = undefined;
             let yMax = undefined;
 
-            if (detailChartMode === 'RAW') {
-                dataPoints = course.weeklyMarks;
-                yLabel = 'A Marks (Absence Count)';
-                yMax = Math.max(5, Math.ceil(course.maxWeeklyAMarks * 1.15));
-                stepSize = Math.max(1, Math.ceil(yMax / 5));
-            } else {
-                dataPoints = course.normalizedTimeline.map(val => val * 100);
-                yLabel = '% of Maximum A Marks';
-                yMax = 110;
-                stepSize = 20;
-            }
+            if (selectedCourseIndex === null) {
+                // Calculate average raw A marks across all processed courses per week
+                const avgWeekly = Array(52).fill(0);
+                if (processedCourses.length > 0) {
+                    for (let w = 0; w < 52; w++) {
+                        let sum = 0;
+                        processedCourses.forEach(c => {
+                            sum += c.weeklyMarks[w] || 0;
+                        });
+                        avgWeekly[w] = sum / processedCourses.length;
+                    }
+                }
+                dataPoints = avgWeekly;
+                yLabel = 'Avg A Marks / Course';
+                yMax = Math.max(1, Math.ceil(Math.max(...avgWeekly) * 1.15));
+                stepSize = yMax > 5 ? Math.ceil(yMax / 5) : 0.5;
 
-            // Draw annotation lines for Change Week and Max Week
-            const changeWk = course.isFlagged ? course.changeWeek : -1;
-            const maxWk = course.maxWeek;
-
-            detailChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: detailChartMode === 'RAW' ? 'Weekly A Marks' : 'Normalized Absence %',
-                        data: dataPoints,
-                        borderColor: '#8f43ec',
-                        backgroundColor: 'rgba(143, 67, 236, 0.08)',
-                        borderWidth: 2,
-                        fill: true,
-                        tension: 0.2,
-                        pointBackgroundColor: labels.map(w => {
-                            if (w === changeWk) return '#ec4899'; // Pink marker for change-week
-                            if (w === maxWk) return '#10b981'; // Green marker for max-week
-                            return '#8f43ec';
-                        }),
-                        pointRadius: labels.map(w => {
-                            if (w === changeWk || w === maxWk) return 6;
-                            return 3;
-                        }),
-                        pointHoverRadius: 8
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        },
-                        tooltip: {
-                            backgroundColor: '#110e22',
-                            titleColor: '#fff',
-                            bodyColor: '#fff',
-                            borderColor: 'rgba(255,255,255,0.1)',
-                            borderWidth: 1,
-                            callbacks: {
-                                label: function (context) {
-                                    let label = context.dataset.label || '';
-                                    if (label) {
-                                        label += ': ';
+                detailChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Average Absences',
+                            data: dataPoints,
+                            borderColor: '#06b6d4',
+                            backgroundColor: 'rgba(6, 182, 212, 0.08)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.2,
+                            pointBackgroundColor: labels.map(w => {
+                                if (HOLIDAY_WEEKS[w]) return 'rgba(255, 255, 255, 0.15)'; // Gray out for holidays
+                                return '#06b6d4';
+                            }),
+                            pointRadius: labels.map(w => {
+                                if (HOLIDAY_WEEKS[w]) return 1; // Smaller point for holidays
+                                return 3;
+                            }),
+                            pointHoverRadius: 6
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                backgroundColor: '#110e22',
+                                titleColor: '#fff',
+                                bodyColor: '#fff',
+                                borderColor: 'rgba(255,255,255,0.1)',
+                                borderWidth: 1,
+                                callbacks: {
+                                    title: function(context) {
+                                        const w = context[0].parsed.x + 1;
+                                        const holidayName = HOLIDAY_WEEKS[w];
+                                        return `Week ${w}` + (holidayName ? ` [Holiday: ${holidayName}]` : '');
+                                    },
+                                    label: function (context) {
+                                        return `Avg Absences: ${context.parsed.y.toFixed(2)}`;
                                     }
-                                    if (context.parsed.y !== null) {
-                                        label += context.parsed.y.toFixed(0) + (detailChartMode === 'NORM' ? '%' : '');
-                                    }
-                                    const w = context.parsed.x + 1;
-                                    if (w === changeWk) label += ' [Increase Week]';
-                                    if (w === maxWk) label += ' [Max A Week]';
-                                    return label;
                                 }
                             }
-                        }
-                    },
-                    scales: {
-                        x: {
-                            grid: {
-                                color: 'rgba(255,255,255,0.04)'
-                            },
-                            ticks: {
-                                color: '#9c97b5',
-                                font: { family: 'Outfit', size: 9 },
-                                maxTicksLimit: 26
-                            },
-                            title: {
-                                display: true,
-                                text: 'Academic Week',
-                                color: '#9c97b5',
-                                font: { family: 'Outfit', size: 10 }
-                            }
                         },
-                        y: {
-                            min: 0,
-                            max: yMax,
-                            grid: {
-                                color: 'rgba(255,255,255,0.04)'
+                        scales: {
+                            x: {
+                                grid: { color: 'rgba(255,255,255,0.04)' },
+                                ticks: { color: '#9c97b5', font: { family: 'Outfit', size: 9 }, maxTicksLimit: 26 },
+                                title: { display: true, text: 'Academic Week', color: '#9c97b5', font: { family: 'Outfit', size: 10 } }
                             },
-                            ticks: {
-                                color: '#9c97b5',
-                                font: { family: 'Outfit', size: 9 },
-                                stepSize: stepSize
-                            },
-                            title: {
-                                display: true,
-                                text: yLabel,
-                                color: '#9c97b5',
-                                font: { family: 'Outfit', size: 10 }
+                            y: {
+                                min: 0,
+                                max: yMax,
+                                grid: { color: 'rgba(255,255,255,0.04)' },
+                                ticks: { color: '#9c97b5', font: { family: 'Outfit', size: 9 }, stepSize: stepSize },
+                                title: { display: true, text: yLabel, color: '#9c97b5', font: { family: 'Outfit', size: 10 } }
                             }
                         }
                     }
+                });
+            } else {
+                const course = processedCourses[selectedCourseIndex];
+                if (detailChartMode === 'RAW') {
+                    dataPoints = course.weeklyMarks;
+                    yLabel = 'A Marks (Absence Count)';
+                    yMax = Math.max(5, Math.ceil(course.maxWeeklyAMarks * 1.15));
+                    stepSize = Math.max(1, Math.ceil(yMax / 5));
+                } else {
+                    dataPoints = course.normalizedTimeline.map(val => val * 100);
+                    yLabel = '% of Maximum A Marks';
+                    yMax = 110;
+                    stepSize = 20;
                 }
-            });
+
+                // Draw annotation lines for Change Week and Max Week
+                const changeWk = course.isFlagged ? course.changeWeek : -1;
+                const maxWk = course.maxWeek;
+
+                detailChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: detailChartMode === 'RAW' ? 'Weekly A Marks' : 'Normalized Absence %',
+                            data: dataPoints,
+                            borderColor: '#8f43ec',
+                            backgroundColor: 'rgba(143, 67, 236, 0.08)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.2,
+                            pointBackgroundColor: labels.map(w => {
+                                if (HOLIDAY_WEEKS[w]) return 'rgba(255, 255, 255, 0.15)'; // Gray out for holidays
+                                if (w === changeWk) return '#ec4899'; // Pink marker for change-week
+                                if (w === maxWk) return '#10b981'; // Green marker for max-week
+                                return '#8f43ec';
+                            }),
+                            pointRadius: labels.map(w => {
+                                if (HOLIDAY_WEEKS[w]) return 2; // Smaller radius for holidays
+                                if (w === changeWk || w === maxWk) return 6;
+                                return 3;
+                            }),
+                            pointHoverRadius: 8
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                backgroundColor: '#110e22',
+                                titleColor: '#fff',
+                                bodyColor: '#fff',
+                                borderColor: 'rgba(255,255,255,0.1)',
+                                borderWidth: 1,
+                                callbacks: {
+                                    title: function(context) {
+                                        const w = context[0].parsed.x + 1;
+                                        const holidayName = HOLIDAY_WEEKS[w];
+                                        return `Week ${w}` + (holidayName ? ` [Holiday: ${holidayName}]` : '');
+                                    },
+                                    label: function (context) {
+                                        let label = context.dataset.label || '';
+                                        if (label) {
+                                            label += ': ';
+                                        }
+                                        if (context.parsed.y !== null) {
+                                            label += context.parsed.y.toFixed(0) + (detailChartMode === 'NORM' ? '%' : '');
+                                        }
+                                        const w = context.parsed.x + 1;
+                                        if (w === changeWk) label += ' [Increase Week]';
+                                        if (w === maxWk) label += ' [Max A Week]';
+                                        return label;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                grid: {
+                                    color: 'rgba(255,255,255,0.04)'
+                                },
+                                ticks: {
+                                    color: '#9c97b5',
+                                    font: { family: 'Outfit', size: 9 },
+                                    maxTicksLimit: 26
+                                },
+                                title: {
+                                    display: true,
+                                    text: 'Academic Week',
+                                    color: '#9c97b5',
+                                    font: { family: 'Outfit', size: 10 }
+                                }
+                            },
+                            y: {
+                                min: 0,
+                                max: yMax,
+                                grid: {
+                                    color: 'rgba(255,255,255,0.04)'
+                                },
+                                ticks: {
+                                    color: '#9c97b5',
+                                    font: { family: 'Outfit', size: 9 },
+                                    stepSize: stepSize
+                                },
+                                title: {
+                                    display: true,
+                                    text: yLabel,
+                                    color: '#9c97b5',
+                                    font: { family: 'Outfit', size: 10 }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
         }
 
         // Dashboard Flagged Course Distribution Chart
@@ -2666,6 +2771,30 @@
                             labels: {
                                 color: '#9c97b5',
                                 font: { family: 'Outfit', size: 10 }
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: '#110e22',
+                            titleColor: '#fff',
+                            bodyColor: '#fff',
+                            borderColor: 'rgba(255,255,255,0.1)',
+                            borderWidth: 1,
+                            callbacks: {
+                                title: function(context) {
+                                    const w = context[0].parsed.x + 1;
+                                    const holidayName = HOLIDAY_WEEKS[w];
+                                    return `Week ${w}` + (holidayName ? ` [Holiday: ${holidayName}]` : '');
+                                },
+                                label: function(context) {
+                                    let label = context.dataset.label.split(' (')[0] || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y !== null) {
+                                        label += context.parsed.y.toFixed(1) + '%';
+                                    }
+                                    return label;
+                                }
                             }
                         }
                     },
@@ -2868,6 +2997,7 @@
                 }
 
                 syntheticCourses.push({
+                    id: i,
                     session: "2025/26",
                     code,
                     dept: "Academic Division",
