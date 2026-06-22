@@ -2534,6 +2534,41 @@
             drawDetailChart();
         }
 
+        // Custom plugin to draw term boundaries (Pre-Easter at Week 26, Pre-May at Week 31)
+        const termBordersPlugin = {
+            id: 'termBorders',
+            beforeDraw(chart) {
+                const { ctx, chartArea: { top, bottom, left, right }, scales: { x } } = chart;
+                if (!x) return;
+
+                ctx.save();
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)'; // Subtle vertical dashed line
+                ctx.lineWidth = 1.2;
+                ctx.setLineDash([5, 5]);
+
+                const borders = [
+                    { idx: 25, label: 'Pre-Easter Break' },
+                    { idx: 30, label: 'Pre-May Half Term' }
+                ];
+
+                borders.forEach(b => {
+                    const xPos = x.getPixelForTick(b.idx);
+                    if (xPos >= left && xPos <= right) {
+                        ctx.beginPath();
+                        ctx.moveTo(xPos, top);
+                        ctx.lineTo(xPos, bottom);
+                        ctx.stroke();
+
+                        ctx.fillStyle = '#9c97b5';
+                        ctx.font = '9px Outfit, sans-serif';
+                        ctx.textAlign = 'right';
+                        ctx.fillText(b.label, xPos - 5, top + 12);
+                    }
+                });
+                ctx.restore();
+            }
+        };
+
         // Detail Chart creation using Chart.js (handles both Overview and Course Specific trends)
         function drawDetailChart() {
             const ctx = document.getElementById('courseDetailChart').getContext('2d');
@@ -2623,7 +2658,8 @@
                                 title: { display: true, text: yLabel, color: '#9c97b5', font: { family: 'Outfit', size: 10 } }
                             }
                         }
-                    }
+                    },
+                    plugins: [termBordersPlugin]
                 });
             } else {
                 const course = processedCourses[selectedCourseIndex];
@@ -2736,7 +2772,8 @@
                                 }
                             }
                         }
-                    }
+                    },
+                    plugins: [termBordersPlugin]
                 });
             }
         }
@@ -2788,7 +2825,8 @@
                                 precision: 0
                             }
                         }
-                    }
+                    },
+                    plugins: [termBordersPlugin]
                 }
             });
 
@@ -2944,7 +2982,8 @@
                                 font: { family: 'Outfit', size: 10 }
                             }
                         }
-                    }
+                    },
+                    plugins: [termBordersPlugin]
                 }
             });
         }
