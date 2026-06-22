@@ -1,0 +1,2802 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Academic Absence & A-Mark Analyzer</title>
+    <!-- Google Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <!-- Chart.js and SheetJS CDNs -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --bg-gradient-start: #0a0712;
+            --bg-gradient-end: #030206;
+            --card-bg: rgba(18, 14, 32, 0.65);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --text-primary: #f1edf7;
+            --text-secondary: #9c97b5;
+            --text-muted: #64607d;
+            --primary: #8f43ec;
+            --primary-glow: rgba(143, 67, 236, 0.4);
+            --secondary: #ec4899;
+            --accent: #06b6d4;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --font-sans: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.5);
+            --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.6);
+            --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.8);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--bg-gradient-end);
+            background-image:
+                radial-gradient(circle at 10% 20%, rgba(143, 67, 236, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(236, 72, 153, 0.1) 0%, transparent 40%),
+                linear-gradient(to bottom, var(--bg-gradient-start), var(--bg-gradient-end));
+            background-attachment: fixed;
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.5;
+            overflow-x: hidden;
+        }
+
+        /* Layout Structure */
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar Styling */
+        .sidebar {
+            width: 340px;
+            background: rgba(10, 8, 20, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-right: 1px solid var(--card-border);
+            padding: 2rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            height: 100vh;
+            position: fixed;
+            overflow-y: auto;
+            z-index: 100;
+        }
+
+        .main-content {
+            margin-left: 340px;
+            flex: 1;
+            padding: 2.5rem;
+            max-width: 1600px;
+        }
+
+        /* Brand Header */
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .brand-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 1.25rem;
+            box-shadow: 0 0 15px var(--primary-glow);
+        }
+
+        .brand-text h1 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            letter-spacing: -0.025em;
+            background: linear-gradient(to right, #ffffff, #cfa9ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .brand-text p {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        /* File Upload Area */
+        .upload-section {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .upload-box {
+            border: 2px dashed rgba(143, 67, 236, 0.4);
+            border-radius: 16px;
+            padding: 2rem 1rem;
+            text-align: center;
+            background: rgba(143, 67, 236, 0.03);
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .upload-box:hover,
+        .upload-box.dragover {
+            border-color: var(--primary);
+            background: rgba(143, 67, 236, 0.08);
+            box-shadow: 0 0 15px rgba(143, 67, 236, 0.15);
+        }
+
+        .upload-box svg {
+            width: 42px;
+            height: 42px;
+            stroke: var(--primary);
+            transition: var(--transition);
+        }
+
+        .upload-box:hover svg {
+            transform: translateY(-4px);
+            stroke: var(--secondary);
+        }
+
+        .upload-box h3 {
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+
+        .upload-box p {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .status-badge {
+            padding: 0.5rem 0.75rem;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--card-border);
+        }
+
+        .status-badge.success {
+            background: rgba(16, 185, 129, 0.1);
+            border-color: rgba(16, 185, 129, 0.2);
+            color: var(--success);
+        }
+
+        .status-badge.error {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: rgba(239, 68, 68, 0.2);
+            color: var(--danger);
+        }
+
+        .status-badge.warning {
+            background: rgba(245, 158, 11, 0.1);
+            border-color: rgba(245, 158, 11, 0.2);
+            color: var(--warning);
+        }
+
+        /* Form Controls & Sliders */
+        .controls-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        .controls-card h2 {
+            font-size: 1rem;
+            font-weight: 600;
+            border-bottom: 1px solid var(--card-border);
+            padding-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .label-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .val-badge {
+            background: var(--primary);
+            color: white;
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            outline: none;
+            transition: var(--transition);
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(143, 67, 236, 0.5);
+            transition: var(--transition);
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .checkbox-group input {
+            cursor: pointer;
+            accent-color: var(--primary);
+            width: 16px;
+            height: 16px;
+        }
+
+        .checkbox-label {
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+        }
+
+        .number-input {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            padding: 0.4rem 0.6rem;
+            color: var(--text-primary);
+            font-family: var(--font-sans);
+            font-size: 0.85rem;
+            width: 100%;
+            outline: none;
+            transition: var(--transition);
+        }
+
+        .number-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 8px rgba(143, 67, 236, 0.2);
+        }
+
+        /* Buttons */
+        .btn {
+            font-family: var(--font-sans);
+            font-weight: 600;
+            font-size: 0.9rem;
+            padding: 0.8rem 1.5rem;
+            border-radius: 12px;
+            border: none;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            width: 100%;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            box-shadow: 0 4px 15px rgba(143, 67, 236, 0.3);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(143, 67, 236, 0.45);
+        }
+
+        .btn-primary:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--card-border);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        /* Main View Headers */
+        .main-header {
+            margin-bottom: 2rem;
+        }
+
+        .main-header h2 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            margin-bottom: 0.25rem;
+        }
+
+        .main-header p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* Cautions and Warnings */
+        .warning-bar {
+            background: rgba(245, 158, 11, 0.07);
+            border: 1px solid rgba(245, 158, 11, 0.15);
+            border-radius: 16px;
+            padding: 1rem 1.25rem;
+            margin-bottom: 2rem;
+            display: flex;
+            gap: 1rem;
+            align-items: flex-start;
+        }
+
+        .warning-bar svg {
+            flex-shrink: 0;
+            stroke: var(--warning);
+            width: 24px;
+            height: 24px;
+            margin-top: 2px;
+        }
+
+        .warning-text h4 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--warning);
+            margin-bottom: 0.15rem;
+        }
+
+        .warning-text p {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        /* Dashboard KPI Grid */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.25rem;
+            margin-bottom: 2rem;
+        }
+
+        .kpi-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            position: relative;
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+            transition: var(--transition);
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(255, 255, 255, 0.15);
+            box-shadow: var(--shadow-md);
+        }
+
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--accent-color, var(--primary));
+        }
+
+        .kpi-label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .kpi-value {
+            font-size: 2rem;
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            color: white;
+            line-height: 1;
+        }
+
+        .kpi-subtext {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        /* Tabs and Workspace */
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            border-bottom: 1px solid var(--card-border);
+            margin-bottom: 1.5rem;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-family: var(--font-sans);
+            font-weight: 600;
+            font-size: 0.95rem;
+            padding: 0.75rem 1.25rem;
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+        }
+
+        .tab-btn:hover {
+            color: white;
+        }
+
+        .tab-btn.active {
+            color: var(--primary-light);
+        }
+
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+        }
+
+        .tab-panel {
+            display: none;
+        }
+
+        .tab-panel.active {
+            display: block;
+        }
+
+        /* Dashboard Flex Container for Visualizer */
+        .dashboard-layout {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (min-width: 1200px) {
+            .dashboard-layout {
+                grid-template-columns: 55% 45%;
+            }
+        }
+
+        .dashboard-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 24px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow-md);
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .card-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        /* Tables */
+        .table-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .search-box {
+            position: relative;
+            flex: 1;
+            max-width: 320px;
+        }
+
+        .search-box input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+            padding: 0.5rem 1rem 0.5rem 2.25rem;
+            color: white;
+            font-family: var(--font-sans);
+            font-size: 0.85rem;
+            outline: none;
+            transition: var(--transition);
+        }
+
+        .search-box input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 10px rgba(143, 67, 236, 0.15);
+        }
+
+        .search-box svg {
+            position: absolute;
+            left: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            stroke: var(--text-muted);
+            width: 16px;
+            height: 16px;
+        }
+
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.01);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            max-height: 480px;
+            position: relative;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+            text-align: left;
+        }
+
+        thead {
+            position: sticky;
+            top: 0;
+            background: #110e22;
+            z-index: 10;
+        }
+
+        th {
+            padding: 0.75rem 1rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            border-bottom: 2px solid var(--card-border);
+            cursor: pointer;
+            user-select: none;
+            white-space: nowrap;
+            transition: var(--transition);
+        }
+
+        th:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        th.sorted-asc::after {
+            content: ' ▲';
+            font-size: 0.65rem;
+        }
+
+        th.sorted-desc::after {
+            content: ' ▼';
+            font-size: 0.65rem;
+        }
+
+        td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            color: var(--text-primary);
+            max-width: 250px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        tr {
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        tr:hover {
+            background: rgba(143, 67, 236, 0.04);
+        }
+
+        tr.selected {
+            background: rgba(143, 67, 236, 0.1) !important;
+            border-left: 3px solid var(--primary);
+        }
+
+        /* Tags and Badges */
+        .conf-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.2rem 0.5rem;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+        }
+
+        .conf-badge.high {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .conf-badge.medium {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+        }
+
+        .conf-badge.low {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .week-badge {
+            background: rgba(255, 255, 255, 0.08);
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 0.75rem;
+        }
+
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+        }
+
+        .page-btns {
+            display: flex;
+            gap: 0.25rem;
+        }
+
+        .page-btn {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--card-border);
+            color: white;
+            padding: 0.35rem 0.75rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .page-btn:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .page-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .page-btn.active {
+            background: var(--primary);
+            border-color: var(--primary);
+        }
+
+        /* Course Detail Panel Styling */
+        .detail-meta-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 0.75rem;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 1rem;
+        }
+
+        .meta-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .meta-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            color: var(--text-muted);
+        }
+
+        .meta-value {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: white;
+        }
+
+        .explanation-box {
+            background: rgba(143, 67, 236, 0.05);
+            border-left: 3px solid var(--primary);
+            padding: 0.75rem 1rem;
+            border-radius: 0 8px 8px 0;
+            font-size: 0.8rem;
+            color: var(--text-primary);
+        }
+
+        .warning-box {
+            background: rgba(239, 68, 68, 0.05);
+            border-left: 3px solid var(--danger);
+            padding: 0.75rem 1rem;
+            border-radius: 0 8px 8px 0;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .chart-toggle-group {
+            display: flex;
+            gap: 0.25rem;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 0.2rem;
+            border-radius: 8px;
+        }
+
+        .chart-toggle-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-family: var(--font-sans);
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.35rem 0.75rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .chart-toggle-btn.active {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 280px;
+            width: 100%;
+        }
+
+        /* Distribution Tab Layout */
+        .distribution-layout {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (min-width: 1200px) {
+            .distribution-layout {
+                grid-template-columns: 45% 55%;
+            }
+        }
+
+        /* Utility classes */
+        .text-gradient {
+            background: linear-gradient(to right, var(--primary-light), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .flex-row-center {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .flex-between {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 4rem 2rem;
+            text-align: center;
+            color: var(--text-muted);
+            gap: 1rem;
+            border: 2px dashed rgba(255, 255, 255, 0.04);
+            border-radius: 20px;
+            height: 100%;
+        }
+
+        .empty-state svg {
+            width: 64px;
+            height: 64px;
+            stroke: var(--text-muted);
+        }
+
+        /* Scrollbars */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="app-container">
+        <!-- Sidebar Area -->
+        <div class="sidebar">
+            <!-- Brand Header -->
+            <div class="brand">
+                <div class="brand-icon">A</div>
+                <div class="brand-text">
+                    <h1>A-Mark Analyzer</h1>
+                    <p>Early Course Completion Detection</p>
+                </div>
+            </div>
+
+            <!-- File Upload Box -->
+            <div class="upload-section">
+                <div class="upload-box" id="dropzone" onclick="document.getElementById('fileInput').click()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                    <h3>Upload Attendance File</h3>
+                    <p>Drag & drop .csv, .xlsx, or .xls or click to browse</p>
+                    <input type="file" id="fileInput" class="file-input" accept=".csv, .xlsx, .xls">
+                </div>
+                <div id="uploadStatus" class="status-badge warning">
+                    <span class="pulse-indicator"></span> No file loaded
+                </div>
+            </div>
+
+            <!-- Threshold Controls -->
+            <div class="controls-card">
+                <h2>Threshold Parameters</h2>
+
+                <!-- Baseline Weeks -->
+                <div class="form-group">
+                    <div class="label-row">
+                        <span>Baseline Period (Weeks)</span>
+                        <span class="val-badge" id="valBaselineWeeks">3</span>
+                    </div>
+                    <input type="range" id="baselineWeeks" min="1" max="8" value="3" oninput="updateValBadge(this)">
+                </div>
+
+                <!-- Comparison Weeks -->
+                <div class="form-group">
+                    <div class="label-row">
+                        <span>Comparison Period (Weeks)</span>
+                        <span class="val-badge" id="valComparisonWeeks">3</span>
+                    </div>
+                    <input type="range" id="comparisonWeeks" min="1" max="8" value="3" oninput="updateValBadge(this)">
+                </div>
+
+                <!-- Required Increase -->
+                <div class="form-group">
+                    <div class="label-row">
+                        <span>Required Change Score</span>
+                        <span class="val-badge" id="valRequiredIncrease">50%</span>
+                    </div>
+                    <input type="range" id="requiredIncrease" min="10" max="100" value="50" step="5"
+                        oninput="updateValBadge(this, '%')">
+                </div>
+
+                <!-- Required Average After -->
+                <div class="form-group">
+                    <div class="label-row">
+                        <span>Min Avg After Increase</span>
+                        <span class="val-badge" id="valRequiredAvgAfter">70%</span>
+                    </div>
+                    <input type="range" id="requiredAvgAfter" min="10" max="100" value="70" step="5"
+                        oninput="updateValBadge(this, '%')">
+                </div>
+
+                <!-- Sustained Week Percentage -->
+                <div class="form-group">
+                    <div class="label-row">
+                        <span>Sustained Week Level</span>
+                        <span class="val-badge" id="valSustainedThreshold">60%</span>
+                    </div>
+                    <input type="range" id="sustainedThreshold" min="10" max="100" value="60" step="5"
+                        oninput="updateValBadge(this, '%')">
+                </div>
+
+                <!-- Required Sustained Weeks -->
+                <div class="form-group">
+                    <div class="label-row">
+                        <span>Min Sustained Weeks</span>
+                        <span class="val-badge" id="valMinSustainedWeeks">2</span>
+                    </div>
+                    <input type="range" id="minSustainedWeeks" min="1" max="5" value="2" oninput="updateValBadge(this)">
+                </div>
+
+                <!-- Early Finish Proportion -->
+                <div class="form-group">
+                    <div class="label-row">
+                        <span>Early Finish Level</span>
+                        <span class="val-badge" id="valEarlyFinishThreshold">80%</span>
+                    </div>
+                    <input type="range" id="earlyFinishThreshold" min="50" max="100" value="80" step="5"
+                        oninput="updateValBadge(this, '%')">
+                </div>
+
+                <!-- Exam Cautious Toggle -->
+                <div class="form-group" style="margin-top: 0.5rem;">
+                    <label class="checkbox-group">
+                        <input type="checkbox" id="cautiousExam" checked onchange="toggleExamWeeksInput()">
+                        <span class="checkbox-label">Cautious Exam-Period Analysis</span>
+                    </label>
+                </div>
+
+                <!-- Exam Weeks Inputs -->
+                <div class="form-row" id="examWeeksContainer">
+                    <div class="form-group">
+                        <div class="label-row"><span style="font-size: 0.75rem;">Exam Start Week</span></div>
+                        <input type="number" id="examStart" class="number-input" min="1" max="52" value="30">
+                    </div>
+                    <div class="form-group">
+                        <div class="label-row"><span style="font-size: 0.75rem;">Exam End Week</span></div>
+                        <input type="number" id="examEnd" class="number-input" min="1" max="52" value="36">
+                    </div>
+                </div>
+            </div>
+
+            <button class="btn btn-primary" id="btnRun" onclick="runAnalysis()" disabled>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                </svg> Run Analysis
+            </button>
+
+            <button class="btn btn-secondary" onclick="loadDemoData()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="23 4 23 10 17 10"></polyline>
+                    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                </svg> Load Demo Data
+            </button>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="main-content">
+            <!-- Main Top Bar -->
+            <div class="main-header">
+                <h2>Academic Absence / A Marks Analysis</h2>
+                <p>Identify courses with early completion patterns based on proportional shifts in absence.</p>
+            </div>
+
+            <!-- Cautious Use Disclaimer -->
+            <div class="warning-bar">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z">
+                    </path>
+                    <line x1="12" y1="9" x2="12" y2="13"></line>
+                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+                <div class="warning-text">
+                    <h4>Potential Early Finish Indicators</h4>
+                    <p>This tool flags courses with statistical changes in absence patterns. It does not definitively
+                        prove a course has finished. High A marks could reflect GCSE exams, work experience, study
+                        leave, temporary timetable changes, or administrative data practices. Verify findings against
+                        physical timetables, exam structures, and curriculum context.</p>
+                </div>
+            </div>
+
+            <!-- Dashboard KPI stats -->
+            <div class="kpi-grid">
+                <div class="kpi-card" style="--accent-color: var(--accent)">
+                    <div class="kpi-label">Total Sheet Rows</div>
+                    <div class="kpi-value" id="kpiTotalRows">-</div>
+                    <div class="kpi-subtext">Excel records parsed</div>
+                </div>
+                <div class="kpi-card" style="--accent-color: var(--primary)">
+                    <div class="kpi-label">FT Rows Analysed</div>
+                    <div class="kpi-value" id="kpiFtRows">-</div>
+                    <div class="kpi-subtext">Filtered (REPMODE = FT)</div>
+                </div>
+                <div class="kpi-card" style="--accent-color: var(--secondary)">
+                    <div class="kpi-label">Flagged Courses</div>
+                    <div class="kpi-value" id="kpiFlaggedCourses">-</div>
+                    <div class="kpi-subtext" id="kpiFlaggedRate">0% of FT courses</div>
+                </div>
+                <div class="kpi-card" style="--accent-color: var(--success)">
+                    <div class="kpi-label">Common Finish Week</div>
+                    <div class="kpi-value" id="kpiCommonWeek">-</div>
+                    <div class="kpi-subtext">Peak week of dramatic increase</div>
+                </div>
+                <div class="kpi-card" style="--accent-color: var(--warning)">
+                    <div class="kpi-label">Confidence Split</div>
+                    <div class="kpi-value" id="kpiConfidenceSplit"
+                        style="font-size: 1.15rem; line-height: 1.5; margin-top: 0.2rem;">
+                        H: - | M: - | L: -
+                    </div>
+                    <div class="kpi-subtext">High, Medium, Low ratings</div>
+                </div>
+            </div>
+
+            <!-- Workspace Tabs -->
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchTab(event, 'tabResults')">Flagged Courses & Course
+                    Visualizer</button>
+                <button class="tab-btn" onclick="switchTab(event, 'tabAnalytics')">Absence Trends & Section
+                    Insights</button>
+            </div>
+
+            <!-- Tab 1: Flagged Courses & Visualizer -->
+            <div id="tabResults" class="tab-panel active">
+                <div class="dashboard-layout" id="resultsDashboard" style="display: none;">
+                    <!-- Results Table Card -->
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                    style="stroke: var(--primary-light);">
+                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                    <line x1="9" y1="9" x2="15" y2="9"></line>
+                                    <line x1="9" y1="13" x2="15" y2="13"></line>
+                                    <line x1="9" y1="17" x2="15" y2="17"></line>
+                                </svg>
+                                Flagged Courses
+                            </h3>
+                            <div class="card-actions">
+                                <select id="filterConfidence" class="number-input" style="width: 110px;"
+                                    onchange="renderResultsTable()">
+                                    <option value="ALL">All Confidences</option>
+                                    <option value="HIGH">High Only</option>
+                                    <option value="MEDIUM">Medium Only</option>
+                                    <option value="LOW">Low Only</option>
+                                </select>
+                                <button class="btn btn-secondary" onclick="exportCSV()"
+                                    style="padding: 0.4rem 0.8rem; width: auto; font-size: 0.8rem;">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                        <polyline points="7 10 12 15 17 10"></polyline>
+                                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                                    </svg> Export CSV
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="table-controls">
+                            <div class="search-box">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="11" cy="11" r="8"></circle>
+                                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                </svg>
+                                <input type="text" id="searchInput" placeholder="Search by code, title, section..."
+                                    oninput="renderResultsTable()">
+                            </div>
+                            <div style="font-size: 0.8rem; color: var(--text-secondary);" id="tableCountText">Showing 0
+                                of 0 courses</div>
+                        </div>
+
+                        <div class="table-container">
+                            <table id="coursesTable">
+                                <thead>
+                                    <tr>
+                                        <th id="th-code" onclick="setSort('code')">Code</th>
+                                        <th id="th-title" onclick="setSort('courseTitle')">Course Title</th>
+                                        <th id="th-section" onclick="setSort('section')">Section</th>
+                                        <th id="th-incWeek" onclick="setSort('changeWeek')">Increase Wk</th>
+                                        <th id="th-maxA" onclick="setSort('maxWeeklyAMarks')">Max A</th>
+                                        <th id="th-confidence" onclick="setSort('confidence')" class="sorted-desc">
+                                            Confidence</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="coursesTableBody">
+                                    <!-- Dynamically generated -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Pagination -->
+                        <div class="pagination">
+                            <div id="paginationInfo">Showing page 1 of 1</div>
+                            <div class="page-btns" id="paginationBtns">
+                                <!-- Dynamically generated -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Course Detail Panel -->
+                    <div class="dashboard-card" id="detailPanel">
+                        <div class="card-header">
+                            <h3 class="card-title text-gradient" id="detailCourseCode">Select a Course</h3>
+                            <div class="chart-toggle-group">
+                                <button class="chart-toggle-btn active" id="btnChartRaw"
+                                    onclick="toggleDetailChartMode('RAW')">Raw A Marks</button>
+                                <button class="chart-toggle-btn" id="btnChartNorm"
+                                    onclick="toggleDetailChartMode('NORM')">Normalized %</button>
+                            </div>
+                        </div>
+
+                        <div id="detailIntro" class="empty-state">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="18" y1="20" x2="18" y2="10"></line>
+                                <line x1="12" y1="20" x2="12" y2="4"></line>
+                                <line x1="6" y1="20" x2="6" y2="14"></line>
+                            </svg>
+                            <p>Click on a row in the flagged courses table to inspect its weekly pattern, analysis
+                                findings, and false positive checks.</p>
+                        </div>
+
+                        <div id="detailData" style="display: none; flex-direction: column; gap: 1.25rem;">
+                            <div style="font-weight: 600; font-size: 0.95rem; color: white;" id="detailCourseTitle">-
+                            </div>
+
+                            <!-- Metadata Grid -->
+                            <div class="detail-meta-grid">
+                                <div class="meta-item">
+                                    <div class="meta-label">Section</div>
+                                    <div class="meta-value" id="detailSection">-</div>
+                                </div>
+                                <div class="meta-item">
+                                    <div class="meta-label">Group Desc</div>
+                                    <div class="meta-value" id="detailGroup">-</div>
+                                </div>
+                                <div class="meta-item">
+                                    <div class="meta-label">Max A / Week</div>
+                                    <div class="meta-value" id="detailMaxA">-</div>
+                                </div>
+                                <div class="meta-item">
+                                    <div class="meta-label">Increase Wk (A)</div>
+                                    <div class="meta-value" id="detailIncreaseWk">-</div>
+                                </div>
+                                <div class="meta-item">
+                                    <div class="meta-label">Change Score</div>
+                                    <div class="meta-value" id="detailChangeScore">-</div>
+                                </div>
+                                <div class="meta-item">
+                                    <div class="meta-label">Rating</div>
+                                    <div id="detailConfRating">-</div>
+                                </div>
+                            </div>
+
+                            <!-- Explanatory Reason -->
+                            <div class="explanation-box">
+                                <strong>Indicator Log:</strong> <span id="detailReasonText">-</span>
+                            </div>
+
+                            <!-- False Positive Alerts -->
+                            <div id="detailWarningsContainer" class="warning-box" style="display: none;">
+                                <strong>False Positive Considerations:</strong>
+                                <ul id="detailWarningsList" style="padding-left: 1.25rem; margin-top: 0.25rem;">
+                                    <!-- Dynamic warnings list -->
+                                </ul>
+                            </div>
+
+                            <!-- Graph Canvas -->
+                            <div class="chart-container">
+                                <canvas id="courseDetailChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Initial Empty State -->
+                <div id="resultsEmptyState" class="empty-state">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="9" y1="9" x2="15" y2="9"></line>
+                        <line x1="9" y1="13" x2="15" y2="13"></line>
+                        <line x1="9" y1="17" x2="15" y2="17"></line>
+                    </svg>
+                    <h2>No Data Loaded Yet</h2>
+                    <p>Upload your Excel file containing the sheet <strong>A_mark_2526</strong> or load the demo data to
+                        start analyzing.</p>
+                </div>
+            </div>
+
+            <!-- Tab 2: Trends and Section Analysis -->
+            <div id="tabAnalytics" class="tab-panel">
+                <div class="distribution-layout" id="analyticsDashboard" style="display: none;">
+                    <!-- Week Distribution Table & Bar Chart -->
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                    style="stroke: var(--accent);">
+                                    <line x1="18" y1="20" x2="18" y2="10"></line>
+                                    <line x1="12" y1="20" x2="12" y2="4"></line>
+                                    <line x1="6" y1="20" x2="6" y2="14"></line>
+                                </svg>
+                                Flag Distribution by Week
+                            </h3>
+                        </div>
+
+                        <div class="chart-container" style="height: 220px;">
+                            <canvas id="flagDistributionChart"></canvas>
+                        </div>
+
+                        <div class="table-container" style="max-height: 280px; margin-top: 1rem;">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Week</th>
+                                        <th style="text-align: right;">Courses Flagged</th>
+                                        <th style="text-align: right;">% of Flagged Courses</th>
+                                        <th style="text-align: right;">% of All FT Courses</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="distributionTableBody">
+                                    <!-- Dynamically generated -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Section Level Analysis -->
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                    style="stroke: var(--secondary);">
+                                    <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+                                    <path d="M2 17l10 5 10-5"></path>
+                                    <path d="M2 12l10 5 10-5"></path>
+                                </svg>
+                                Section-Level Course Absence Trends
+                            </h3>
+                            <div class="card-actions">
+                                <select id="sectionSelect" class="number-input" style="width: 160px;"
+                                    onchange="updateSectionChart()">
+                                    <option value="ALL">All Sections</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: -0.5rem;">
+                            Plots the average weekly A marks as a percentage of maximum A marks, grouped by
+                            departments/sections.
+                        </p>
+
+                        <div class="chart-container" style="height: 380px;">
+                            <canvas id="sectionTrendChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Initial Empty State -->
+                <div id="analyticsEmptyState" class="empty-state">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <line x1="18" y1="20" x2="18" y2="10"></line>
+                        <line x1="12" y1="20" x2="12" y2="4"></line>
+                        <line x1="6" y1="20" x2="6" y2="14"></line>
+                    </svg>
+                    <h2>No Data Loaded Yet</h2>
+                    <p>Upload your Excel file or load the demo data to view trends and section-level metrics.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State Variables
+        let rawData = null;
+        let flaggedCourses = [];
+        let weekDistribution = [];
+
+        // UI Table Settings
+        let searchFilter = '';
+        let confidenceFilter = 'ALL';
+        let sortColumn = 'confidence';
+        let sortDirection = 'desc'; // 'asc' or 'desc'
+        let currentPage = 1;
+        const rowsPerPage = 10;
+
+        // Details Visualizer Settings
+        let selectedCourseIndex = null;
+        let detailChartMode = 'RAW'; // 'RAW' or 'NORM'
+
+        // Charts instances
+        let detailChart = null;
+        let distChart = null;
+        let secChart = null;
+
+        // Load initial hooks
+        document.addEventListener("DOMContentLoaded", () => {
+            setupDragAndDrop();
+            toggleExamWeeksInput();
+        });
+
+        // Sync input ranges with textual labels
+        function updateValBadge(slider, suffix = '') {
+            const badgeId = 'val' + slider.id.charAt(0).toUpperCase() + slider.id.slice(1);
+            const badge = document.getElementById(badgeId);
+            if (badge) {
+                badge.innerText = slider.value + suffix;
+            }
+
+            // Dynamic constraint checks: sustained weeks cannot exceed comparison period
+            if (slider.id === 'comparisonWeeks') {
+                const sustainedWeeksSlider = document.getElementById('minSustainedWeeks');
+                sustainedWeeksSlider.max = slider.value;
+                if (parseInt(sustainedWeeksSlider.value) > parseInt(slider.value)) {
+                    sustainedWeeksSlider.value = slider.value;
+                    document.getElementById('valMinSustainedWeeks').innerText = slider.value;
+                }
+            }
+        }
+
+        function toggleExamWeeksInput() {
+            const checkbox = document.getElementById('cautiousExam');
+            const container = document.getElementById('examWeeksContainer');
+            if (checkbox.checked) {
+                container.style.opacity = '1';
+                container.querySelectorAll('input').forEach(el => el.disabled = false);
+            } else {
+                container.style.opacity = '0.4';
+                container.querySelectorAll('input').forEach(el => el.disabled = true);
+            }
+        }
+
+        // Drag and Drop implementation
+        function setupDragAndDrop() {
+            const dropzone = document.getElementById('dropzone');
+            const fileInput = document.getElementById('fileInput');
+
+            dropzone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropzone.classList.add('dragover');
+            });
+
+            dropzone.addEventListener('dragleave', () => {
+                dropzone.classList.remove('dragover');
+            });
+
+            dropzone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropzone.classList.remove('dragover');
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    fileInput.files = files;
+                    handleFileSelect(files[0]);
+                }
+            });
+
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    handleFileSelect(e.target.files[0]);
+                }
+            });
+        }
+
+        function cleanHeaderString(val) {
+            if (val === null || val === undefined) return '';
+            // Strip UTF-8 BOM, zero-width space, control characters, and clean whitespace
+            return val.toString()
+                .replace(/[\ufeff\u200b\u0000-\u001F\u007F-\u009F]/g, '')
+                .toUpperCase()
+                .trim();
+        }
+
+        function detectSeparator(text) {
+            const firstLine = text.split('\n')[0] || '';
+            const commas = (firstLine.match(/,/g) || []).length;
+            const semicolons = (firstLine.match(/;/g) || []).length;
+            const tabs = (firstLine.match(/\t/g) || []).length;
+
+            if (semicolons > commas && semicolons > tabs) return ';';
+            if (tabs > commas && tabs > semicolons) return '\t';
+            return ','; // Default
+        }
+
+        function parseCSV(text) {
+            // Strip BOM if present at the start of text
+            if (text.startsWith('\ufeff')) {
+                text = text.substring(1);
+            }
+            const sep = detectSeparator(text);
+            const lines = [];
+            let row = [""];
+            let inQuotes = false;
+
+            for (let i = 0; i < text.length; i++) {
+                const c = text[i];
+                const next = text[i + 1];
+
+                if (c === '"') {
+                    if (inQuotes && next === '"') {
+                        row[row.length - 1] += '"';
+                        i++; // Skip next quote
+                    } else {
+                        inQuotes = !inQuotes;
+                    }
+                } else if (c === sep && !inQuotes) {
+                    row.push("");
+                } else if ((c === '\r' || c === '\n') && !inQuotes) {
+                    if (c === '\r' && next === '\n') {
+                        i++;
+                    }
+                    lines.push(row);
+                    row = [""];
+                } else {
+                    row[row.length - 1] += c;
+                }
+            }
+            if (row.length > 1 || row[0] !== "") {
+                lines.push(row);
+            }
+
+            // Clean up cells: convert empty strings to null to match SheetJS behavior
+            return lines.map(row => row.map(cell => {
+                if (cell === null || cell === undefined) return null;
+                const trimmed = cell.trim();
+                return trimmed === "" ? null : trimmed;
+            }));
+        }
+
+        function handleFileSelect(file) {
+            const statusBadge = document.getElementById('uploadStatus');
+            statusBadge.className = 'status-badge warning';
+
+            const isCSV = file.name.endsWith('.csv') || file.type === 'text/csv';
+            statusBadge.innerHTML = `<span class="pulse-indicator"></span> Reading ${isCSV ? 'CSV' : 'Excel'} file...`;
+
+            const reader = new FileReader();
+
+            if (isCSV) {
+                reader.onload = function (e) {
+                    try {
+                        const text = e.target.result;
+                        const rows = parseCSV(text);
+
+                        if (rows.length < 3) {
+                            statusBadge.className = 'status-badge error';
+                            statusBadge.innerText = "Error: File has insufficient rows.";
+                            return;
+                        }
+
+                        statusBadge.className = 'status-badge success';
+                        statusBadge.innerText = `Loaded ${file.name}`;
+                        document.getElementById('btnRun').removeAttribute('disabled');
+                        processWorkbookData(rows);
+                    } catch (err) {
+                        console.error(err);
+                        statusBadge.className = 'status-badge error';
+                        statusBadge.innerText = "Error: Could not parse CSV file.";
+                    }
+                };
+                reader.onerror = () => {
+                    statusBadge.className = 'status-badge error';
+                    statusBadge.innerText = "Error reading CSV file.";
+                };
+                reader.readAsText(file);
+            } else {
+                reader.onload = function (e) {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, { type: 'array' });
+
+                        // Find worksheet named A_mark_2526
+                        let sheetName = 'A_mark_2526';
+                        if (!workbook.SheetNames.includes(sheetName)) {
+                            sheetName = workbook.SheetNames[0];
+                            statusBadge.className = 'status-badge error';
+                            statusBadge.innerText = `Worksheet 'A_mark_2526' missing. Using '${sheetName}'.`;
+                        } else {
+                            statusBadge.className = 'status-badge success';
+                            statusBadge.innerText = `Loaded ${file.name}`;
+                        }
+
+                        const worksheet = workbook.Sheets[sheetName];
+                        const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: null });
+
+                        if (rows.length < 3) {
+                            statusBadge.className = 'status-badge error';
+                            statusBadge.innerText = "Error: File has insufficient rows.";
+                            return;
+                        }
+
+                        document.getElementById('btnRun').removeAttribute('disabled');
+                        processWorkbookData(rows);
+                    } catch (err) {
+                        console.error(err);
+                        statusBadge.className = 'status-badge error';
+                        statusBadge.innerText = "Error: Could not parse Excel file.";
+                    }
+                };
+                reader.onerror = () => {
+                    statusBadge.className = 'status-badge error';
+                    statusBadge.innerText = "Error reading Excel file.";
+                };
+                reader.readAsArrayBuffer(file);
+            }
+        }
+
+        // Process parsed rows
+        function processWorkbookData(rows) {
+            const statusBadge = document.getElementById('uploadStatus');
+            const targetHeaders = ['SESSION', 'CODE', 'DEPT', 'SECTION', 'COURSE', 'COURSETITLE', 'GROUPDESCRIPTION', 'REPMODE'];
+
+            // Robust header finding: Scan first 15 rows for the one containing key fields
+            let bestRowIndex = 2; // Default to row 3 (index 2)
+            let maxMatchScore = 0;
+
+            for (let r = 0; r < Math.min(15, rows.length); r++) {
+                const row = rows[r];
+                if (!row) continue;
+                let score = 0;
+                row.forEach(cell => {
+                    if (cell !== null && cell !== undefined && cell !== '') {
+                        const s = cleanHeaderString(cell);
+                        // Weight essential headers heavily
+                        if (targetHeaders.includes(s)) {
+                            score += 10;
+                        } else {
+                            // Check if it's a week column header "1" to "52"
+                            const num = parseInt(s, 10);
+                            if (!isNaN(num) && num >= 1 && num <= 52 && s === num.toString()) {
+                                score += 1;
+                            }
+                        }
+                    }
+                });
+                // Prefer row 3 (index 2) in case of ties
+                if (score > maxMatchScore || (score === maxMatchScore && r === 2)) {
+                    maxMatchScore = score;
+                    bestRowIndex = r;
+                }
+            }
+
+            const headers = rows[bestRowIndex];
+            if (!headers) {
+                statusBadge.className = 'status-badge error';
+                statusBadge.innerText = "Error: Headings not found in Row 3.";
+                return;
+            }
+
+            // Map header titles to column indices
+            const headerMap = {};
+            headers.forEach((h, idx) => {
+                if (h !== null && h !== undefined) {
+                    const cleaned = cleanHeaderString(h);
+                    if (cleaned) {
+                        headerMap[cleaned] = idx;
+                    }
+                }
+            });
+
+            // Check for essential columns
+            const required = ['CODE', 'COURSE', 'COURSETITLE', 'REPMODE'];
+            const missing = required.filter(col => headerMap[col] === undefined);
+            if (missing.length > 0) {
+                statusBadge.className = 'status-badge error';
+                const foundHeaders = Object.keys(headerMap).filter(k => k.length > 0).join(', ');
+                statusBadge.innerText = `Header missing: ${missing.join(', ')}. Identified headers: [${foundHeaders || 'None'}]`;
+                return;
+            }
+
+            // Map week columns 1..52
+            const weekColIndices = [];
+            for (let w = 1; w <= 52; w++) {
+                let colIdx = headers.findIndex(h => h !== null && h !== undefined && h.toString().trim() === w.toString());
+                if (colIdx === -1) {
+                    // Fallback to N..BH (indices 13 to 59 in a standard spreadsheet)
+                    colIdx = 13 + (w - 1);
+                }
+                weekColIndices.push(colIdx);
+            }
+
+            // Map data rows, filtering for REPMODE === 'FT'
+            const courses = [];
+            let ftCount = 0;
+
+            for (let r = bestRowIndex + 1; r < rows.length; r++) {
+                const row = rows[r];
+                if (!row || row.length === 0) continue;
+
+                // Safe read REPMODE
+                const repModeIdx = headerMap['REPMODE'];
+                const repMode = row[repModeIdx] ? row[repModeIdx].toString().trim().toUpperCase() : '';
+
+                if (repMode !== 'FT') {
+                    continue;
+                }
+
+                ftCount++;
+
+                const getCell = (colName) => {
+                    const idx = headerMap[colName];
+                    return idx !== undefined && row[idx] !== null && row[idx] !== undefined ? row[idx].toString().trim() : '';
+                };
+
+                const session = getCell('SESSION');
+                const code = getCell('CODE');
+                const dept = getCell('DEPT');
+                const section = getCell('SECTION');
+                const course = getCell('COURSE');
+                const courseTitle = getCell('COURSETITLE');
+                const groupDesc = getCell('GROUPDESCRIPTION');
+
+                // Extract weekly numbers
+                const weeklyMarks = [];
+                let totalAMarks = 0;
+                let hasNonZero = false;
+
+                for (let w = 0; w < 52; w++) {
+                    const colIdx = weekColIndices[w];
+                    let val = 0;
+                    if (colIdx !== undefined && colIdx < row.length) {
+                        const cellVal = row[colIdx];
+                        if (cellVal !== null && cellVal !== undefined && cellVal !== '') {
+                            val = parseFloat(cellVal);
+                            if (isNaN(val)) val = 0; // Text/invalid falls back to 0
+                        }
+                    }
+                    weeklyMarks.push(val);
+                    totalAMarks += val;
+                    if (val > 0) hasNonZero = true;
+                }
+
+                courses.push({
+                    session,
+                    code,
+                    dept,
+                    section,
+                    course,
+                    courseTitle,
+                    groupDesc,
+                    weeklyMarks,
+                    totalAMarks,
+                    hasNonZero,
+                    maxWeeklyAMarks: Math.max(...weeklyMarks)
+                });
+            }
+
+            rawData = {
+                totalRows: rows.length - (bestRowIndex + 1),
+                ftCount: ftCount,
+                courses: courses
+            };
+
+            statusBadge.className = 'status-badge success';
+            statusBadge.innerText = `Loaded ${ftCount} FT courses from sheet`;
+
+            document.getElementById('btnRun').removeAttribute('disabled');
+
+            // Automatically run analysis
+            runAnalysis();
+        }
+
+        // Run Change-point and early completion algorithms
+        function runAnalysis() {
+            if (!rawData) return;
+
+            // 1. Read values from sliders and controls
+            const pBaseline = parseInt(document.getElementById('baselineWeeks').value);
+            const pComparison = parseInt(document.getElementById('comparisonWeeks').value);
+            const pRequiredIncrease = parseFloat(document.getElementById('requiredIncrease').value) / 100;
+            const pRequiredAvgAfter = parseFloat(document.getElementById('requiredAvgAfter').value) / 100;
+            const pSustainedLevel = parseFloat(document.getElementById('sustainedThreshold').value) / 100;
+            const pMinSustained = parseInt(document.getElementById('minSustainedWeeks').value);
+            const pEarlyFinishLevel = parseFloat(document.getElementById('earlyFinishThreshold').value) / 100;
+            const pCautiousExam = document.getElementById('cautiousExam').checked;
+            const pExamStart = parseInt(document.getElementById('examStart').value);
+            const pExamEnd = parseInt(document.getElementById('examEnd').value);
+
+            flaggedCourses = [];
+
+            // Reset section selection options list
+            const uniqueSections = new Set();
+
+            // 2. Perform math analysis on each course
+            rawData.courses.forEach(course => {
+                const maxA = course.maxWeeklyAMarks;
+                uniqueSections.add(course.section || 'Unknown');
+
+                // Skip courses with zero total absences
+                if (maxA <= 0) {
+                    return;
+                }
+
+                // Generate normalized percentage timeline
+                const P = course.weeklyMarks.map(val => val / maxA);
+
+                // Find week of maximum A marks
+                // (1-based index of the first occurrence of maximum)
+                const maxWeek = course.weeklyMarks.indexOf(maxA) + 1;
+
+                // Find the high proportion week
+                // (earliest week where A marks are >= earlyFinishLevel of maxA)
+                let highProportionWeek = -1;
+                for (let w = 0; w < 52; w++) {
+                    if (P[w] >= pEarlyFinishLevel) {
+                        highProportionWeek = w + 1;
+                        break;
+                    }
+                }
+
+                // Change-Point Search: Loop from baseline index to (52 - comparison index)
+                let changeWeekIdx = -1;
+                let changeScore = 0;
+                let avgBefore = 0;
+                let avgAfter = 0;
+
+                for (let i = pBaseline; i <= 52 - pComparison; i++) {
+                    // Calculate average before change-point
+                    let sumB = 0;
+                    for (let j = i - pBaseline; j < i; j++) {
+                        sumB += P[j];
+                    }
+                    const localAvgBefore = sumB / pBaseline;
+
+                    // Calculate average after change-point
+                    let sumA = 0;
+                    for (let j = i; j < i + pComparison; j++) {
+                        sumA += P[j];
+                    }
+                    const localAvgAfter = sumA / pComparison;
+                    const localChangeScore = localAvgAfter - localAvgBefore;
+
+                    // Check if threshold rules are met
+                    if (localChangeScore >= pRequiredIncrease && localAvgAfter >= pRequiredAvgAfter) {
+                        // Check sustained weeks criteria
+                        let sustainedCount = 0;
+                        for (let j = i; j < i + pComparison; j++) {
+                            if (P[j] >= pSustainedLevel) {
+                                sustainedCount++;
+                            }
+                        }
+
+                        if (sustainedCount >= pMinSustained) {
+                            // Flag found! Record the first occurrence
+                            changeWeekIdx = i;
+                            changeScore = localChangeScore;
+                            avgBefore = localAvgBefore;
+                            avgAfter = localAvgAfter;
+                            break;
+                        }
+                    }
+                }
+
+                // If change week is flagged, perform safeguard analysis and confidence logic
+                if (changeWeekIdx !== -1) {
+                    const changeWeek = changeWeekIdx + 1; // 1-based index
+
+                    // Track drop backs after the comparison window
+                    let weeksBelow30 = 0;
+                    for (let t = changeWeekIdx + pComparison; t < 52; t++) {
+                        if (P[t] < 0.30) {
+                            weeksBelow30++;
+                        }
+                    }
+
+                    // Average over the final weeks (50, 51, 52)
+                    const endSum = P[49] + P[50] + P[51];
+                    const avgEnd = endSum / 3;
+
+                    // State-crossing to detect multiple spikes
+                    let stateCrossings = 0;
+                    let state = 'LOW';
+                    for (let t = 0; t < 52; t++) {
+                        if (state === 'LOW' && P[t] >= 0.60) {
+                            stateCrossings++;
+                            state = 'HIGH';
+                        } else if (state === 'HIGH' && P[t] < 0.30) {
+                            state = 'LOW';
+                        }
+                    }
+
+                    // GCSE / Exam course title pattern checklist
+                    const titleLower = (course.courseTitle || '').toLowerCase();
+                    const codeLower = (course.code || '').toLowerCase();
+                    const isExamSubject =
+                        titleLower.includes('gcse') || titleLower.includes('math') ||
+                        titleLower.includes('english') || titleLower.includes('numeracy') ||
+                        titleLower.includes('lit') || codeLower.includes('gcse') ||
+                        codeLower.includes('eng') || codeLower.includes('mat');
+
+                    // Work placement / Leave keywords
+                    const isPlacement =
+                        titleLower.includes('work exp') || titleLower.includes('placement') ||
+                        titleLower.includes('project') || titleLower.includes('leave') ||
+                        titleLower.includes('training');
+
+                    // Determine Confidence Rating & Explanations
+                    let confidence = 'HIGH';
+                    let reasons = [];
+                    let warnings = [];
+
+                    reasons.push(`Absences jumped by ${(changeScore * 100).toFixed(0)}% in week ${changeWeek}.`);
+
+                    // Cautious conditions
+                    const isLateStart = changeWeek >= 47; // Week 47 onwards
+                    const inExamPeriod = pCautiousExam && (changeWeek >= pExamStart && changeWeek <= pExamEnd);
+                    const hasDropbacks = weeksBelow30 > 0;
+                    const lowMaxA = maxA < 3;
+
+                    if (avgEnd >= 0.70 && !hasDropbacks && !inExamPeriod && !isLateStart && !lowMaxA && stateCrossings <= 1) {
+                        confidence = 'HIGH';
+                        reasons.push(`Highly sustained pattern (Avg ${(avgEnd * 100).toFixed(0)}% at end-of-year) with zero later drops.`);
+                    } else {
+                        // Downgrade to Medium
+                        confidence = 'MEDIUM';
+                        reasons.push(`Sustained average of ${(avgEnd * 100).toFixed(0)}% at the end of the year.`);
+
+                        if (weeksBelow30 > 0 && weeksBelow30 <= 2) {
+                            warnings.push(`Absence briefly dropped back down (${weeksBelow30} week${weeksBelow30 > 1 ? 's' : ''} below 30% after week ${changeWeek + pComparison}), hinting at minor scheduling adjustments.`);
+                        }
+                        if (lowMaxA) {
+                            warnings.push(`Small student volume (Max of ${maxA} A-marks in a single week), making the analysis sensitive to minor individual fluctuations.`);
+                        }
+                        if (inExamPeriod) {
+                            warnings.push(`The change-point week falls directly in the academic exam period (Weeks ${pExamStart}-${pExamEnd}), which is highly prone to revision study leave.`);
+                        }
+                        if (isExamSubject) {
+                            warnings.push("Subject title matching GCSE/English/Maths keywords, commonly subjected to exam absence timetabling.");
+                        }
+
+                        // Downgrade to Low
+                        if (weeksBelow30 > 2 || avgEnd < 0.50 || isLateStart || stateCrossings >= 2) {
+                            confidence = 'LOW';
+                            if (weeksBelow30 > 2) {
+                                warnings.push(`Absences dropped low again for ${weeksBelow30} weeks later in the year, indicating teaching likely resumed.`);
+                            }
+                            if (avgEnd < 0.50) {
+                                warnings.push(`Final week absences averaged only ${(avgEnd * 100).toFixed(0)}%, showing a return to baseline attendance.`);
+                            }
+                            if (isLateStart) {
+                                warnings.push(`The pattern began very late (Week ${changeWeek}), representing standard end-of-year scheduling rather than early completion.`);
+                            }
+                            if (stateCrossings >= 2) {
+                                warnings.push("Multiple separate absence spikes observed across the year, suggesting cyclical activities (e.g. blok-delivery, work placements).");
+                            }
+                        }
+                    }
+
+                    flaggedCourses.push({
+                        ...course,
+                        changeWeek,
+                        highProportionWeek,
+                        maxWeek,
+                        changeScore,
+                        avgBefore,
+                        avgAfter,
+                        avgEnd,
+                        confidence,
+                        reason: reasons.join(' '),
+                        warnings: warnings,
+                        normalizedTimeline: P
+                    });
+                }
+            });
+
+            // 3. Populate Section Dropdown Options
+            const secDropdown = document.getElementById('sectionSelect');
+            const prevSecVal = secDropdown.value;
+            secDropdown.innerHTML = '<option value="ALL">All Sections</option>';
+            Array.from(uniqueSections).sort().forEach(sec => {
+                const opt = document.createElement('option');
+                opt.value = sec;
+                opt.innerText = sec;
+                secDropdown.appendChild(opt);
+            });
+            if (uniqueSections.has(prevSecVal)) {
+                secDropdown.value = prevSecVal;
+            }
+
+            // 4. Calculate Distribution by Week
+            calculateWeeklyDistribution();
+
+            // 5. Update KPI Cards
+            updateDashboardKPIs();
+
+            // 6. Draw Dashboard Charts
+            drawDistributionChart();
+            updateSectionChart();
+
+            // 7. Render course level table
+            currentPage = 1;
+            renderResultsTable();
+
+            // 8. Select first course by default to visualize if available
+            if (flaggedCourses.length > 0) {
+                document.getElementById('resultsEmptyState').style.display = 'none';
+                document.getElementById('resultsDashboard').style.display = 'grid';
+                document.getElementById('analyticsEmptyState').style.display = 'none';
+                document.getElementById('analyticsDashboard').style.display = 'grid';
+
+                // Select first filtered row
+                const firstFlagged = getFilteredCourses()[0];
+                if (firstFlagged) {
+                    const idx = flaggedCourses.findIndex(c => c.code === firstFlagged.code);
+                    selectCourse(idx);
+                }
+            } else {
+                showNoFlaggedState();
+            }
+        }
+
+        function calculateWeeklyDistribution() {
+            weekDistribution = [];
+            const totalFT = rawData.courses.length;
+
+            for (let w = 1; w <= 52; w++) {
+                const count = flaggedCourses.filter(c => c.changeWeek === w).length;
+                const pctOfFlagged = flaggedCourses.length > 0 ? (count / flaggedCourses.length) * 100 : 0;
+                const pctOfAllFT = totalFT > 0 ? (count / totalFT) * 100 : 0;
+
+                weekDistribution.push({
+                    week: w,
+                    count,
+                    pctOfFlagged,
+                    pctOfAllFT
+                });
+            }
+        }
+
+        function updateDashboardKPIs() {
+            document.getElementById('kpiTotalRows').innerText = rawData.totalRows;
+            document.getElementById('kpiFtRows').innerText = rawData.ftCount;
+            document.getElementById('kpiFlaggedCourses').innerText = flaggedCourses.length;
+
+            const flagRate = rawData.ftCount > 0 ? (flaggedCourses.length / rawData.ftCount) * 100 : 0;
+            document.getElementById('kpiFlaggedRate').innerText = `${flagRate.toFixed(1)}% of FT courses`;
+
+            // Find week with most flags
+            let maxCount = -1;
+            let commonWeek = '-';
+            weekDistribution.forEach(wd => {
+                if (wd.count > maxCount && wd.count > 0) {
+                    maxCount = wd.count;
+                    commonWeek = `Week ${wd.week}`;
+                }
+            });
+            document.getElementById('kpiCommonWeek').innerText = commonWeek;
+
+            // Confidence split
+            const highCount = flaggedCourses.filter(c => c.confidence === 'HIGH').length;
+            const medCount = flaggedCourses.filter(c => c.confidence === 'MEDIUM').length;
+            const lowCount = flaggedCourses.filter(c => c.confidence === 'LOW').length;
+            document.getElementById('kpiConfidenceSplit').innerText = `H: ${highCount} | M: ${medCount} | L: ${lowCount}`;
+        }
+
+        function showNoFlaggedState() {
+            document.getElementById('resultsDashboard').style.display = 'none';
+            document.getElementById('resultsEmptyState').style.display = 'flex';
+            document.getElementById('resultsEmptyState').innerHTML = `
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+            <h2>No Flagged Courses Found</h2>
+            <p>Based on your current threshold parameters, no courses meet the early-finish criteria. Try reducing the "Required Change Score" or the "Min Avg After Increase" threshold in the sidebar.</p>
+        `;
+
+            document.getElementById('analyticsDashboard').style.display = 'none';
+            document.getElementById('analyticsEmptyState').style.display = 'flex';
+            document.getElementById('analyticsEmptyState').innerHTML = `
+            <h2>No Flags to Distribute</h2>
+            <p>Adjust parameters in the sidebar to populate analysis trend visualisations.</p>
+        `;
+        }
+
+        // Filter, search, and sort helper
+        function getFilteredCourses() {
+            let list = [...flaggedCourses];
+
+            // Search
+            if (searchFilter) {
+                const f = searchFilter.toLowerCase();
+                list = list.filter(c =>
+                    (c.code || '').toLowerCase().includes(f) ||
+                    (c.courseTitle || '').toLowerCase().includes(f) ||
+                    (c.section || '').toLowerCase().includes(f) ||
+                    (c.groupDesc || '').toLowerCase().includes(f)
+                );
+            }
+
+            // Confidence filter
+            if (confidenceFilter !== 'ALL') {
+                list = list.filter(c => c.confidence === confidenceFilter);
+            }
+
+            // Sort
+            list.sort((a, b) => {
+                let valA = a[sortColumn];
+                let valB = b[sortColumn];
+
+                // Map confidence to numeric scores for proper sorting
+                if (sortColumn === 'confidence') {
+                    const scores = { 'HIGH': 3, 'MEDIUM': 2, 'LOW': 1 };
+                    valA = scores[a.confidence] || 0;
+                    valB = scores[b.confidence] || 0;
+                }
+
+                // Handle strings vs numbers
+                if (typeof valA === 'string') valA = valA.toLowerCase();
+                if (typeof valB === 'string') valB = valB.toLowerCase();
+
+                if (valA < valB) return sortDirection === 'asc' ? -1 : 1;
+                if (valA > valB) return sortDirection === 'asc' ? 1 : -1;
+                return 0;
+            });
+
+            return list;
+        }
+
+        function setSort(column) {
+            if (sortColumn === column) {
+                sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortColumn = column;
+                sortDirection = 'desc'; // Default to desc (highly suspicious first)
+            }
+
+            // Update th headers visual indicators
+            const headers = ['code', 'courseTitle', 'section', 'changeWeek', 'maxWeeklyAMarks', 'confidence'];
+            headers.forEach(h => {
+                const el = document.getElementById('th-' + (h === 'changeWeek' ? 'incWeek' : h === 'courseTitle' ? 'title' : h));
+                if (el) {
+                    el.className = '';
+                    if (h === sortColumn) {
+                        el.className = sortDirection === 'asc' ? 'sorted-asc' : 'sorted-desc';
+                    }
+                }
+            });
+
+            currentPage = 1;
+            renderResultsTable();
+        }
+
+        // Render results table with pagination
+        function renderResultsTable() {
+            searchFilter = document.getElementById('searchInput').value;
+            confidenceFilter = document.getElementById('filterConfidence').value;
+
+            const filtered = getFilteredCourses();
+            const totalItems = filtered.length;
+            const totalPages = Math.max(1, Math.ceil(totalItems / rowsPerPage));
+
+            if (currentPage > totalPages) currentPage = totalPages;
+
+            const startIdx = (currentPage - 1) * rowsPerPage;
+            const pageItems = filtered.slice(startIdx, startIdx + rowsPerPage);
+
+            document.getElementById('tableCountText').innerText = `Showing ${filtered.length} of ${flaggedCourses.length} courses`;
+
+            const tbody = document.getElementById('coursesTableBody');
+            tbody.innerHTML = '';
+
+            if (pageItems.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 3rem;">No courses match current search / filter.</td></tr>`;
+                document.getElementById('paginationInfo').innerText = `Page 1 of 1`;
+                renderPaginationButtons(1, 1);
+                return;
+            }
+
+            pageItems.forEach(c => {
+                const tr = document.createElement('tr');
+                // Check if this row represents the selected course
+                const actualIdx = flaggedCourses.findIndex(fc => fc.code === c.code);
+                if (actualIdx === selectedCourseIndex) {
+                    tr.className = 'selected';
+                }
+
+                tr.onclick = () => selectCourse(actualIdx);
+
+                const confClass = c.confidence.toLowerCase();
+
+                tr.innerHTML = `
+                <td><strong>${c.code}</strong></td>
+                <td><div style="font-weight: 500; max-width: 240px; overflow: hidden; text-overflow: ellipsis;" title="${c.courseTitle}">${c.courseTitle}</div></td>
+                <td><div style="max-width: 140px; overflow: hidden; text-overflow: ellipsis;">${c.section || 'N/A'}</div></td>
+                <td style="text-align: center;"><span class="week-badge">Week ${c.changeWeek}</span></td>
+                <td style="text-align: center;"><strong>${c.maxWeeklyAMarks}</strong></td>
+                <td><span class="conf-badge ${confClass}">${c.confidence}</span></td>
+            `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('paginationInfo').innerText = `Page ${currentPage} of ${totalPages}`;
+            renderPaginationButtons(currentPage, totalPages);
+        }
+
+        function renderPaginationButtons(current, total) {
+            const container = document.getElementById('paginationBtns');
+            container.innerHTML = '';
+
+            // Prev button
+            const prev = document.createElement('button');
+            prev.className = 'page-btn';
+            prev.innerText = '◀';
+            prev.disabled = current === 1;
+            prev.onclick = () => { currentPage--; renderResultsTable(); };
+            container.appendChild(prev);
+
+            // Page numbers (limit to adjacent 3 pages)
+            let start = Math.max(1, current - 1);
+            let end = Math.min(total, current + 1);
+
+            for (let i = start; i <= end; i++) {
+                const btn = document.createElement('button');
+                btn.className = `page-btn ${i === current ? 'active' : ''}`;
+                btn.innerText = i;
+                btn.onclick = () => { currentPage = i; renderResultsTable(); };
+                container.appendChild(btn);
+            }
+
+            // Next button
+            const next = document.createElement('button');
+            next.className = 'page-btn';
+            next.innerText = '▶';
+            next.disabled = current === total;
+            next.onclick = () => { currentPage++; renderResultsTable(); };
+            container.appendChild(next);
+        }
+
+        // Selected Course Visualizer Details
+        function selectCourse(idx) {
+            if (idx === null || idx < 0 || idx >= flaggedCourses.length) return;
+            selectedCourseIndex = idx;
+
+            // Redraw table page to highlight selected row
+            const prevPage = currentPage;
+            renderResultsTable();
+
+            const course = flaggedCourses[idx];
+
+            document.getElementById('detailIntro').style.display = 'none';
+            document.getElementById('detailData').style.display = 'flex';
+
+            document.getElementById('detailCourseCode').innerText = course.code;
+            document.getElementById('detailCourseTitle').innerText = course.courseTitle;
+            document.getElementById('detailSection').innerText = course.section || 'Unknown';
+            document.getElementById('detailGroup').innerText = course.groupDesc || 'N/A';
+            document.getElementById('detailMaxA').innerText = `${course.maxWeeklyAMarks} (Week ${course.maxWeek})`;
+            document.getElementById('detailIncreaseWk').innerText = `Week ${course.changeWeek} (${course.weeklyMarks[course.changeWeek - 1]} A)`;
+            document.getElementById('detailChangeScore').innerText = `+${(course.changeScore * 100).toFixed(0)}%`;
+
+            const confBadge = document.getElementById('detailConfRating');
+            confBadge.className = `conf-badge ${course.confidence.toLowerCase()}`;
+            confBadge.innerText = course.confidence;
+
+            document.getElementById('detailReasonText').innerText = course.reason;
+
+            // Warning triggers
+            const wContainer = document.getElementById('detailWarningsContainer');
+            const wList = document.getElementById('detailWarningsList');
+            wList.innerHTML = '';
+
+            if (course.warnings && course.warnings.length > 0) {
+                course.warnings.forEach(w => {
+                    const li = document.createElement('li');
+                    li.innerText = w;
+                    wList.appendChild(li);
+                });
+                wContainer.style.display = 'block';
+            } else {
+                wContainer.style.display = 'none';
+            }
+
+            // Draw Chart
+            drawDetailChart();
+        }
+
+        function toggleDetailChartMode(mode) {
+            detailChartMode = mode;
+            document.getElementById('btnChartRaw').classList.toggle('active', mode === 'RAW');
+            document.getElementById('btnChartNorm').classList.toggle('active', mode === 'NORM');
+            drawDetailChart();
+        }
+
+        // Detail Chart creation using Chart.js
+        function drawDetailChart() {
+            if (selectedCourseIndex === null) return;
+            const course = flaggedCourses[selectedCourseIndex];
+            const ctx = document.getElementById('courseDetailChart').getContext('2d');
+
+            if (detailChart) {
+                detailChart.destroy();
+            }
+
+            const labels = Array.from({ length: 52 }, (_, i) => i + 1);
+            let dataPoints = [];
+            let yLabel = '';
+            let stepSize = undefined;
+            let yMax = undefined;
+
+            if (detailChartMode === 'RAW') {
+                dataPoints = course.weeklyMarks;
+                yLabel = 'A Marks (Absence Count)';
+                yMax = Math.max(5, Math.ceil(course.maxWeeklyAMarks * 1.15));
+                stepSize = Math.max(1, Math.ceil(yMax / 5));
+            } else {
+                dataPoints = course.normalizedTimeline.map(val => val * 100);
+                yLabel = '% of Maximum A Marks';
+                yMax = 110;
+                stepSize = 20;
+            }
+
+            // Draw annotation lines for Change Week and Max Week
+            const changeWk = course.changeWeek;
+            const maxWk = course.maxWeek;
+
+            detailChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: detailChartMode === 'RAW' ? 'Weekly A Marks' : 'Normalized Absence %',
+                        data: dataPoints,
+                        borderColor: '#8f43ec',
+                        backgroundColor: 'rgba(143, 67, 236, 0.08)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.2,
+                        pointBackgroundColor: labels.map(w => {
+                            if (w === changeWk) return '#ec4899'; // Pink marker for change-week
+                            if (w === maxWk) return '#10b981'; // Green marker for max-week
+                            return '#8f43ec';
+                        }),
+                        pointRadius: labels.map(w => {
+                            if (w === changeWk || w === maxWk) return 6;
+                            return 3;
+                        }),
+                        pointHoverRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: '#110e22',
+                            titleColor: '#fff',
+                            bodyColor: '#fff',
+                            borderColor: 'rgba(255,255,255,0.1)',
+                            borderWidth: 1,
+                            callbacks: {
+                                label: function (context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y !== null) {
+                                        label += context.parsed.y.toFixed(0) + (detailChartMode === 'NORM' ? '%' : '');
+                                    }
+                                    const w = context.parsed.x + 1;
+                                    if (w === changeWk) label += ' [Increase Week]';
+                                    if (w === maxWk) label += ' [Max A Week]';
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                color: 'rgba(255,255,255,0.04)'
+                            },
+                            ticks: {
+                                color: '#9c97b5',
+                                font: { family: 'Outfit', size: 9 },
+                                maxTicksLimit: 26
+                            },
+                            title: {
+                                display: true,
+                                text: 'Academic Week',
+                                color: '#9c97b5',
+                                font: { family: 'Outfit', size: 10 }
+                            }
+                        },
+                        y: {
+                            min: 0,
+                            max: yMax,
+                            grid: {
+                                color: 'rgba(255,255,255,0.04)'
+                            },
+                            ticks: {
+                                color: '#9c97b5',
+                                font: { family: 'Outfit', size: 9 },
+                                stepSize: stepSize
+                            },
+                            title: {
+                                display: true,
+                                text: yLabel,
+                                color: '#9c97b5',
+                                font: { family: 'Outfit', size: 10 }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Dashboard Flagged Course Distribution Chart
+        function drawDistributionChart() {
+            const ctx = document.getElementById('flagDistributionChart').getContext('2d');
+            if (distChart) {
+                distChart.destroy();
+            }
+
+            const labels = weekDistribution.map(wd => wd.week);
+            const data = weekDistribution.map(wd => wd.count);
+
+            distChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Flagged Courses',
+                        data: data,
+                        backgroundColor: 'rgba(6, 182, 212, 0.4)',
+                        borderColor: '#06b6d4',
+                        borderWidth: 1.5,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            ticks: {
+                                color: '#9c97b5',
+                                font: { family: 'Outfit', size: 9 },
+                                maxTicksLimit: 26
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(255, 255, 255, 0.04)' },
+                            ticks: {
+                                color: '#9c97b5',
+                                font: { family: 'Outfit', size: 9 },
+                                precision: 0
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Also render the Distribution Table
+            const tbody = document.getElementById('distributionTableBody');
+            tbody.innerHTML = '';
+
+            // Filter weeks with flags for displaying in the table (highly dense)
+            const activeWeeks = weekDistribution.filter(wd => wd.count > 0);
+            if (activeWeeks.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">No courses flagged.</td></tr>`;
+                return;
+            }
+
+            activeWeeks.forEach(wd => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                <td><strong>Week ${wd.week}</strong></td>
+                <td style="text-align: right;"><strong>${wd.count}</strong></td>
+                <td style="text-align: right;">${wd.pctOfFlagged.toFixed(1)}%</td>
+                <td style="text-align: right;">${wd.pctOfAllFT.toFixed(2)}%</td>
+            `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Section Level Trends
+        function updateSectionChart() {
+            if (!rawData) return;
+            const selectedSec = document.getElementById('sectionSelect').value;
+            const ctx = document.getElementById('sectionTrendChart').getContext('2d');
+
+            if (secChart) {
+                secChart.destroy();
+            }
+
+            // Calculate average normalized profile for each section
+            const sectionsData = {};
+
+            rawData.courses.forEach(c => {
+                const sec = c.section || 'Unknown';
+                if (c.maxWeeklyAMarks <= 0) return;
+
+                if (!sectionsData[sec]) {
+                    sectionsData[sec] = {
+                        count: 0,
+                        weeklySums: Array(52).fill(0)
+                    };
+                }
+
+                sectionsData[sec].count++;
+                for (let w = 0; w < 52; w++) {
+                    sectionsData[sec].weeklySums[w] += (c.weeklyMarks[w] / c.maxWeeklyAMarks);
+                }
+            });
+
+            const datasets = [];
+            const colors = [
+                '#a855f7', '#ec4899', '#06b6d4', '#10b981', '#f59e0b',
+                '#ef4444', '#3b82f6', '#14b8a6', '#f43f5e', '#6366f1'
+            ];
+
+            let colorIdx = 0;
+
+            Object.keys(sectionsData).forEach(sec => {
+                if (selectedSec !== 'ALL' && sec !== selectedSec) return;
+
+                const profile = sectionsData[sec].weeklySums.map(sum => (sum / sectionsData[sec].count) * 100);
+                const color = colors[colorIdx % colors.length];
+                colorIdx++;
+
+                datasets.push({
+                    label: `${sec} (${sectionsData[sec].count} courses)`,
+                    data: profile,
+                    borderColor: color,
+                    backgroundColor: color + '15',
+                    borderWidth: 2,
+                    pointRadius: 1,
+                    tension: 0.25,
+                    fill: selectedSec !== 'ALL' // Only fill if we've drilled down into one section
+                });
+            });
+
+            secChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: Array.from({ length: 52 }, (_, i) => i + 1),
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                color: '#9c97b5',
+                                font: { family: 'Outfit', size: 10 }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: 'rgba(255, 255, 255, 0.04)' },
+                            ticks: {
+                                color: '#9c97b5',
+                                font: { family: 'Outfit', size: 9 },
+                                maxTicksLimit: 26
+                            }
+                        },
+                        y: {
+                            min: 0,
+                            max: 105,
+                            grid: { color: 'rgba(255, 255, 255, 0.04)' },
+                            ticks: {
+                                color: '#9c97b5',
+                                font: { family: 'Outfit', size: 9 },
+                                stepSize: 20
+                            },
+                            title: {
+                                display: true,
+                                text: 'Average % of Maximum A Marks',
+                                color: '#9c97b5',
+                                font: { family: 'Outfit', size: 10 }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Switch active Tab
+        function switchTab(evt, tabId) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'));
+
+            evt.currentTarget.classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+
+            // Force charts resize to prevent canvas issues
+            if (tabId === 'tabAnalytics') {
+                if (distChart) distChart.resize();
+                if (secChart) secChart.resize();
+            } else {
+                if (detailChart) detailChart.resize();
+            }
+        }
+
+        // Export Table as CSV file
+        function exportCSV() {
+            if (flaggedCourses.length === 0) return;
+
+            const headers = [
+                "Course Code", "Course Title", "Section", "Group Description",
+                "Dramatic Increase Week", "Week of Maximum A Marks", "Maximum Weekly A Marks",
+                "A Marks in Increase Week", "Normalised A Mark % in Increase Week",
+                "Avg Normalised % Before", "Avg Normalised % After",
+                "Change Score", "Confidence Rating", "Reason for Flag", "Possible False Positive Warnings"
+            ];
+
+            const rows = flaggedCourses.map(c => {
+                const rawInIncreaseWk = c.weeklyMarks[c.changeWeek - 1];
+                const normInIncreaseWk = c.normalizedTimeline[c.changeWeek - 1] * 100;
+                const warningsJoined = c.warnings ? c.warnings.join(' | ') : '';
+
+                return [
+                    c.code,
+                    c.courseTitle,
+                    c.section,
+                    c.groupDesc,
+                    c.changeWeek,
+                    c.maxWeek,
+                    c.maxWeeklyAMarks,
+                    rawInIncreaseWk,
+                    normInIncreaseWk.toFixed(1) + "%",
+                    (c.avgBefore * 100).toFixed(1) + "%",
+                    (c.avgAfter * 100).toFixed(1) + "%",
+                    (c.changeScore * 100).toFixed(1) + "%",
+                    c.confidence,
+                    c.reason,
+                    warningsJoined
+                ];
+            });
+
+            let csvContent = "data:text/csv;charset=utf-8,"
+                + [headers.map(h => `"${h.replace(/"/g, '""')}"`).join(",")]
+                    .concat(rows.map(r => r.map(val => {
+                        if (val === null || val === undefined) return '""';
+                        const s = val.toString().replace(/"/g, '""');
+                        return `"${s}"`;
+                    }).join(",")))
+                    .join("\n");
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `academic_absence_analysis_${new Date().toISOString().split('T')[0]}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Synthetic Test Data Generator for interactive preview
+        function loadDemoData() {
+            const sections = ["Engineering", "Business & IT", "Creative Arts", "Health & Social Care", "A-Levels", "GCSE Maths & English"];
+            const coursesPool = [
+                { code: "ENG301", title: "Level 3 Extended Diploma in Mechanical Engineering", section: "Engineering", group: "Year 2 A" },
+                { code: "ENG102", title: "Level 1 Certificate in Engineering Skills", section: "Engineering", group: "Group B" },
+                { code: "BUS302", title: "BTEC Level 3 National Diploma in Business Management", section: "Business & IT", group: "FT Year 1" },
+                { code: "COMP201", title: "Level 2 Diploma in Information Technology & Coding", section: "Business & IT", group: "Comp Sci A" },
+                { code: "ART310", title: "Extended Diploma in Art and Design (Fine Art & Graphic)", section: "Creative Arts", group: "Year 2" },
+                { code: "ART101", title: "Level 1 Introductory Diploma in Creative Arts", section: "Creative Arts", group: "Group 1" },
+                { code: "HLT302", title: "Extended Diploma in Health and Social Care (Practice)", section: "Health & Social Care", group: "Year 2 FT" },
+                { code: "HLT201", title: "Level 2 Certificate in Health and Care Professions", section: "Health & Social Care", group: "Group C" },
+                { code: "ALEV-SCI", title: "A-Level Science Pathway (Chemistry & Biology)", section: "A-Levels", group: "Year 13" },
+                { code: "ALEV-HUM", title: "A-Level Humanities Pathway (English, History & Psych)", section: "A-Levels", group: "Year 12" },
+                { code: "GCSE-MA", title: "GCSE Mathematics Foundation Course", section: "GCSE Maths & English", group: "Re-sit Group H" },
+                { code: "GCSE-EN", title: "GCSE English Language Intensive", section: "GCSE Maths & English", group: "Re-sit Group K" },
+            ];
+
+            const syntheticCourses = [];
+
+            // Generate ~80 courses with various profiles
+            for (let i = 0; i < 80; i++) {
+                const template = coursesPool[i % coursesPool.length];
+                const code = `${template.code}-${1000 + i}`;
+                const section = template.section;
+                const courseTitle = template.title;
+                const groupDesc = `${template.group} (${i % 2 === 0 ? 'AM' : 'PM'})`;
+
+                const weeklyMarks = [];
+                // Group size determines raw values
+                const groupSize = Math.floor(Math.random() * 25) + 3; // 3 to 28 students
+
+                // Randomly assign a profile type:
+                // 0: Normal Course (stable attendance, low absences)
+                // 1: Early Finish Course (abrupt shift to max absence)
+                // 2: GCSE Exam-leave Course (isolated spike around w32-35, then returns to 0)
+                // 3: Noisy small group course (Max weekly absences = 1 or 2)
+                // 4: Multi-spike pattern course (Alternating high-low absences)
+                // 5: Very Late Finish Course (abrupt shift around week 49-50)
+                const profileType = i % 6;
+
+                if (profileType === 0) {
+                    // Stable attendance: random 0 to 2 absences throughout 52 weeks
+                    for (let w = 1; w <= 52; w++) {
+                        weeklyMarks.push(Math.random() < 0.2 ? Math.floor(Math.random() * 2) : 0);
+                    }
+                } else if (profileType === 1) {
+                    // Early finish: jumps around week 33 to 38
+                    const completionWeek = Math.floor(Math.random() * 6) + 33; // 33 to 38
+                    for (let w = 1; w <= 52; w++) {
+                        if (w < completionWeek) {
+                            weeklyMarks.push(Math.random() < 0.25 ? Math.floor(Math.random() * 2) : 0);
+                        } else {
+                            // High sustained absences representing full group completion
+                            weeklyMarks.push(Math.floor(groupSize * (0.8 + Math.random() * 0.2)));
+                        }
+                    }
+                } else if (profileType === 2) {
+                    // GCSE Exam Spike: spike in weeks 32-34 (exams), then drop back to normal
+                    for (let w = 1; w <= 52; w++) {
+                        if (w >= 31 && w <= 34) {
+                            weeklyMarks.push(Math.floor(groupSize * (0.7 + Math.random() * 0.3)));
+                        } else {
+                            weeklyMarks.push(Math.random() < 0.20 ? Math.floor(Math.random() * 2) : 0);
+                        }
+                    }
+                } else if (profileType === 3) {
+                    // Noisy small group: max weekly A marks is 2
+                    const completionWeek = 35;
+                    for (let w = 1; w <= 52; w++) {
+                        if (w < completionWeek) {
+                            weeklyMarks.push(Math.random() < 0.05 ? 1 : 0);
+                        } else {
+                            weeklyMarks.push(Math.random() < 0.8 ? 2 : 1);
+                        }
+                    }
+                } else if (profileType === 4) {
+                    // Multi-spike: cyclical absence spikes
+                    for (let w = 1; w <= 52; w++) {
+                        if ((w >= 10 && w <= 14) || (w >= 28 && w <= 32) || (w >= 45 && w <= 49)) {
+                            weeklyMarks.push(Math.floor(groupSize * (0.7 + Math.random() * 0.2)));
+                        } else {
+                            weeklyMarks.push(Math.random() < 0.15 ? Math.floor(Math.random() * 2) : 0);
+                        }
+                    }
+                } else {
+                    // Very Late Finish Course: week 48-50 jump
+                    const completionWeek = Math.floor(Math.random() * 3) + 48; // 48 to 50
+                    for (let w = 1; w <= 52; w++) {
+                        if (w < completionWeek) {
+                            weeklyMarks.push(Math.random() < 0.2 ? Math.floor(Math.random() * 2) : 0);
+                        } else {
+                            weeklyMarks.push(Math.floor(groupSize * (0.8 + Math.random() * 0.2)));
+                        }
+                    }
+                }
+
+                syntheticCourses.push({
+                    session: "2025/26",
+                    code,
+                    dept: "Academic Division",
+                    section,
+                    course: code,
+                    courseTitle,
+                    groupDesc,
+                    weeklyMarks,
+                    totalAMarks: weeklyMarks.reduce((a, b) => a + b, 0),
+                    hasNonZero: weeklyMarks.some(v => v > 0),
+                    maxWeeklyAMarks: Math.max(...weeklyMarks)
+                });
+            }
+
+            rawData = {
+                totalRows: 150, // Simulated total rows
+                ftCount: syntheticCourses.length,
+                courses: syntheticCourses
+            };
+
+            const statusBadge = document.getElementById('uploadStatus');
+            statusBadge.className = 'status-badge success';
+            statusBadge.innerText = `Demo data loaded successfully`;
+
+            document.getElementById('btnRun').removeAttribute('disabled');
+
+            // Auto-trigger analysis
+            runAnalysis();
+        }
+    </script>
+</body>
+
+</html>
