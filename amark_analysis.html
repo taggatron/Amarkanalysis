@@ -1443,9 +1443,9 @@
                         
                         <div id="statsSectionOverview" style="display: none; margin-top: 1rem;">
                             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
-                                <!-- Metric 1: Total absences -->
+                                <!-- Metric 1: Total absences % of Max -->
                                 <div class="stats-metric-card" style="padding: 1rem; border-radius: 8px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04);">
-                                    <h4 style="margin: 0 0 0.5rem 0; font-size: 0.9rem; color: var(--text-primary);">Mean Total Absences (A-Marks)</h4>
+                                    <h4 style="margin: 0 0 0.5rem 0; font-size: 0.9rem; color: var(--text-primary);">Mean Total Absences (% of Max)</h4>
                                     <table style="width: 100%; font-size: 0.8rem; border-collapse: collapse;">
                                         <tr>
                                             <td style="padding: 0.25rem 0; color: var(--text-secondary);">This Section:</td>
@@ -1469,9 +1469,9 @@
                                     </div>
                                 </div>
 
-                                <!-- Metric 2: Max weekly absences -->
+                                <!-- Metric 2: Post-increase absences % of Max -->
                                 <div class="stats-metric-card" style="padding: 1rem; border-radius: 8px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04);">
-                                    <h4 style="margin: 0 0 0.5rem 0; font-size: 0.9rem; color: var(--text-primary);">Mean Max Weekly Absences</h4>
+                                    <h4 style="margin: 0 0 0.5rem 0; font-size: 0.9rem; color: var(--text-primary);">Mean Post-Increase Level (% of Max)</h4>
                                     <table style="width: 100%; font-size: 0.8rem; border-collapse: collapse;">
                                         <tr>
                                             <td style="padding: 0.25rem 0; color: var(--text-secondary);">This Section:</td>
@@ -1495,9 +1495,9 @@
                                     </div>
                                 </div>
 
-                                <!-- Metric 3: Change score -->
+                                <!-- Metric 3: Change score Escalation % -->
                                 <div class="stats-metric-card" style="padding: 1rem; border-radius: 8px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04);">
-                                    <h4 style="margin: 0 0 0.5rem 0; font-size: 0.9rem; color: var(--text-primary);">Mean Change Score (Escalation)</h4>
+                                    <h4 style="margin: 0 0 0.5rem 0; font-size: 0.9rem; color: var(--text-primary);">Mean Change Score (Escalation %)</h4>
                                     <table style="width: 100%; font-size: 0.8rem; border-collapse: collapse;">
                                         <tr>
                                             <td style="padding: 0.25rem 0; color: var(--text-secondary);">This Section:</td>
@@ -3301,8 +3301,8 @@
                     const diff = result.mean1 - result.mean2;
                     const pFormatted = result.pValue < 0.0001 ? '< 0.0001' : result.pValue.toFixed(4);
 
-                    if (meanSecEl) meanSecEl.innerText = `${result.mean1.toFixed(2)} (N=${result.n1})`;
-                    if (meanOthersEl) meanOthersEl.innerText = `${result.mean2.toFixed(2)} (N=${result.n2})`;
+                    if (meanSecEl) meanSecEl.innerText = `${result.mean1.toFixed(1)}% (N=${result.n1})`;
+                    if (meanOthersEl) meanOthersEl.innerText = `${result.mean2.toFixed(1)}% (N=${result.n2})`;
                     if (tStatEl) tStatEl.innerText = result.tStat.toFixed(3);
                     if (pValEl) pValEl.innerText = pFormatted;
 
@@ -3326,19 +3326,19 @@
                 };
 
                 // Run Welch's t-test on three key absence metrics
-                // 1. Total absences in sequential academic weeks
-                const totalSec = sampleSec.map(c => c.totalAMarks || 0);
-                const totalOthers = sampleOthers.map(c => c.totalAMarks || 0);
+                // 1. Total absences as % of Max (up to cutoff week)
+                const totalSec = sampleSec.map(c => c.maxWeeklyAMarks > 0 ? (c.academicWeeklyMarks.slice(0, pCutoffWeek).reduce((sum, val) => sum + val, 0) / (c.maxWeeklyAMarks * pCutoffWeek)) * 100 : 0);
+                const totalOthers = sampleOthers.map(c => c.maxWeeklyAMarks > 0 ? (c.academicWeeklyMarks.slice(0, pCutoffWeek).reduce((sum, val) => sum + val, 0) / (c.maxWeeklyAMarks * pCutoffWeek)) * 100 : 0);
                 renderTTestResult('Total Absences', totalSec, totalOthers, 'statsTotalMeanSec', 'statsTotalMeanOthers', 'statsTotalT', 'statsTotalP', 'statsTotalVerdict');
 
-                // 2. Maximum weekly absences recorded
-                const maxSec = sampleSec.map(c => c.maxWeeklyAMarks || 0);
-                const maxOthers = sampleOthers.map(c => c.maxWeeklyAMarks || 0);
-                renderTTestResult('Max Weekly Absences', maxSec, maxOthers, 'statsMaxMeanSec', 'statsMaxMeanOthers', 'statsMaxT', 'statsMaxP', 'statsMaxVerdict');
+                // 2. Mean post-increase absences as % of Max
+                const postSec = sampleSec.map(c => (c.avgAfter || 0) * 100);
+                const postOthers = sampleOthers.map(c => (c.avgAfter || 0) * 100);
+                renderTTestResult('Post-Increase Level', postSec, postOthers, 'statsMaxMeanSec', 'statsMaxMeanOthers', 'statsMaxT', 'statsMaxP', 'statsMaxVerdict');
 
-                // 3. Escalation change score
-                const changeSec = sampleSec.map(c => c.changeScore || 0);
-                const changeOthers = sampleOthers.map(c => c.changeScore || 0);
+                // 3. Escalation change score %
+                const changeSec = sampleSec.map(c => (c.changeScore || 0) * 100);
+                const changeOthers = sampleOthers.map(c => (c.changeScore || 0) * 100);
                 renderTTestResult('Absence Change Score', changeSec, changeOthers, 'statsChangeMeanSec', 'statsChangeMeanOthers', 'statsChangeT', 'statsChangeP', 'statsChangeVerdict');
             }
         }
