@@ -72,6 +72,8 @@ Courses matching the change-point criteria are assessed by a confidence logic en
    * If no course is selected: Compiles division overview statistics, aggregate charts, a full flagged course table, and active slider settings.
    * Generates base64 PNG snapshots of charts client-side and triggers the browser print dialog.
 
+4. **Zoom Focus Modals**: Every primary container card on the dashboard features a zoom icon in its header. Clicking this icon expands the card into a screen-centered native dialog modal with glassmorphism backdrop filters. Inside the modal, the card maintains its active DOM states (dropdown values, search terms, and scroll positions), and nested charts automatically resize and repaint. Pressing the `Escape` key, clicking outside the content window, or hitting the close button smoothly transitions the card back to its original layout grid slot.
+
 ### Tab 2: Absence Trends & Section Insights
 1. **Flag Distribution by Week**:
    * Bar chart and table displaying the weeks in which courses transitioned to elevated absences.
