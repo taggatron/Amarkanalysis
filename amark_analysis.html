@@ -3746,9 +3746,19 @@
                 const highConf = document.getElementById('overviewHighConf').innerText;
                 const medLowConf = document.getElementById('overviewMedLowConf').innerText;
 
-                // Render flagged courses list
+                // Render flagged courses list sorted by confidence (HIGH first, then MEDIUM, then LOW)
+                const confidenceOrder = { 'HIGH': 3, 'MEDIUM': 2, 'LOW': 1 };
+                const sortedFlaggedCourses = [...flaggedCourses].sort((a, b) => {
+                    const valA = confidenceOrder[a.confidence] || 0;
+                    const valB = confidenceOrder[b.confidence] || 0;
+                    if (valB !== valA) {
+                        return valB - valA;
+                    }
+                    return a.code.localeCompare(b.code);
+                });
+
                 let tableRows = '';
-                flaggedCourses.forEach(c => {
+                sortedFlaggedCourses.forEach(c => {
                     tableRows += `
                         <tr>
                             <td><strong>${c.code}</strong></td>
