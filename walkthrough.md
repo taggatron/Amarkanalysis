@@ -25,6 +25,9 @@ The raw sheet contains attendance data aligned to standard calendar weeks. The d
   * **Week 43**: May Half Term
 * **Two-Way Mapping**: The app establishes `ACADEMIC_TO_CALENDAR` and `CALENDAR_TO_ACADEMIC` arrays to map calendar weeks to consecutive academic weeks (1–40).
 * **FT Course Filtering**: Only rows corresponding to Full-Time (FT) courses are analyzed (e.g., matching common codes and headers like `TOTAL A_MARKS`).
+* **Dynamic Week Beginning Date Mapping**: Chart hover tooltips dynamically display the Week Beginning (W/B) date for each data point:
+  * **Real Sheets**: If the uploaded sheet contains date-formatted column headers, the dashboard dynamically reads and parses those values, clean-formatting them to `DD MMM YYYY`.
+  * **Calculated Mappings**: If column headers are only simple week integers (like in the synthetic/demo data), the system automatically parses the academic year/session (e.g. `"2025/26"`), calculates the first Monday of September, and offsets the calendar weeks to determine exact `W/B` Monday dates.
 
 ---
 
