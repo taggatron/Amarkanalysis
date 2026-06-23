@@ -1996,6 +1996,121 @@
             }
         }
 
+        // Helper to format date string to "DD MMM YYYY"
+        function formatDateString(dateStr) {
+            if (!dateStr) return '';
+            const s = dateStr.toString().trim();
+            
+            // Try to match DD/MM/YYYY or DD/MM/YY or with hyphens
+            const parts = s.split(/[\/\-]/);
+            if (parts.length === 3) {
+                let day = parseInt(parts[0], 10);
+                let month = parseInt(parts[1], 10);
+                let year = parseInt(parts[2], 10);
+                
+                if (!isNaN(day) && !isNaN(month) && !isNaN(year)) {
+                    if (month > 12 && day <= 12) {
+                        const temp = day;
+                        day = month;
+                        month = temp;
+                    }
+                    if (year < 100) {
+                        year += 2000;
+                    }
+                    if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
+                        const d = new Date(year, month - 1, day);
+                        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                        return `${String(d.getDate()).padStart(2, '0')} ${months[d.getMonth()]} ${d.getFullYear()}`;
+                    }
+                }
+            }
+
+            // Fallback to JS Date parser
+            try {
+                const d = new Date(s);
+                if (!isNaN(d.getTime())) {
+                    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                    return `${String(d.getDate()).padStart(2, '0')} ${months[d.getMonth()]} ${d.getFullYear()}`;
+                }
+            } catch (e) {
+                // Ignore
+            }
+
+            return s;
+        }
+
+        // Helper to check if a header value looks like a date
+        function isHeaderValADate(val) {
+            if (!val) return false;
+            const s = val.toString().trim();
+            const num = parseInt(s, 10);
+            if (!isNaN(num) && num >= 1 && num <= 52 && num.toString() === s) {
+                return false;
+            }
+            return s.includes('/') || s.includes('-') || /[a-zA-Z]/.test(s);
+        }
+
+        // Helper to compute the first Monday of September in a given year
+        function getFirstMondayOfSeptember(year) {
+            let date = new Date(year, 8, 1); // 8 is September
+            while (date.getDay() !== 1) { // 1 is Monday
+                date.setDate(date.getDate() + 1);
+            }
+            return date;
+        }
+
+        // Get the week beginning date for a given Academic Week (1-40)
+        function getWeekBeginningDate(academicWeek) {
+            if (!ACADEMIC_TO_CALENDAR || academicWeek < 1 || academicWeek > ACADEMIC_TO_CALENDAR.length) {
+                return '';
+            }
+            const calWeek = ACADEMIC_TO_CALENDAR[academicWeek - 1];
+            return getWeekBeginningDateByCalendarWeek(calWeek);
+        }
+
+        // Get the week beginning date for a given Calendar Week (1-52)
+        function getWeekBeginningDateByCalendarWeek(calWeek) {
+            if (!calWeek || calWeek < 1 || calWeek > 52) return '';
+
+            // 1. Try to use loaded header value from sheet if it looks like a date
+            if (rawData && rawData.weekHeaders && rawData.weekHeaders[calWeek - 1]) {
+                const headerVal = rawData.weekHeaders[calWeek - 1];
+                if (isHeaderValADate(headerVal)) {
+                    return formatDateString(headerVal);
+                }
+            }
+
+            // 2. Otherwise calculate based on the session year
+            let sessionStr = '';
+            if (rawData && rawData.courses && rawData.courses.length > 0) {
+                sessionStr = rawData.courses[0].session || '';
+            }
+            
+            let startYear = 2025; // Default fallback
+            if (sessionStr) {
+                const match = sessionStr.match(/(\d{4})/);
+                if (match) {
+                    startYear = parseInt(match[1], 10);
+                } else {
+                    const shortMatch = sessionStr.match(/(\d{2})/);
+                    if (shortMatch) {
+                        startYear = 2000 + parseInt(shortMatch[1], 10);
+                    }
+                }
+            }
+
+            // Academic Week 1 (Calendar Week 6) is the first Monday of September
+            const firstMondaySep = getFirstMondayOfSeptember(startYear);
+            const targetDate = new Date(firstMondaySep.getTime());
+            targetDate.setDate(firstMondaySep.getDate() + (calWeek - 6) * 7);
+
+            const day = String(targetDate.getDate()).padStart(2, '0');
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const month = months[targetDate.getMonth()];
+            const year = targetDate.getFullYear();
+            
+            return `${day} ${month} ${year}`;
+        }
 
         // Student's t-distribution probability density function (PDF)
         function tPDF(x, v) {
@@ -2568,7 +2683,8 @@
             rawData = {
                 totalRows: rows.length - (bestRowIndex + 1),
                 ftCount: ftCount,
-                courses: courses
+                courses: courses,
+                weekHeaders: weekColIndices.map(colIdx => (colIdx !== undefined && colIdx < headers.length) ? headers[colIdx] : null)
             };
 
             statusBadge.className = 'status-badge success';
@@ -3392,8 +3508,9 @@
                                 borderWidth: 1,
                                 callbacks: {
                                     title: function(context) {
-                                        const w = context[0].parsed.x + 1;
-                                        return `Academic Week ${w}`;
+                                        const w = parseInt(context[0].label, 10) || (context[0].parsed.x + 1);
+                                        const dateStr = getWeekBeginningDate(w);
+                                        return `Academic Week ${w}${dateStr ? ' (W/B ' + dateStr + ')' : ''}`;
                                     },
                                     label: function (context) {
                                         return `Avg Absences: ${context.parsed.y.toFixed(2)}`;
@@ -3475,8 +3592,9 @@
                                 borderWidth: 1,
                                 callbacks: {
                                     title: function(context) {
-                                        const w = context[0].parsed.x + 1;
-                                        return `Academic Week ${w}`;
+                                        const w = parseInt(context[0].label, 10) || (context[0].parsed.x + 1);
+                                        const dateStr = getWeekBeginningDate(w);
+                                        return `Academic Week ${w}${dateStr ? ' (W/B ' + dateStr + ')' : ''}`;
                                     },
                                     label: function (context) {
                                         let label = context.dataset.label || '';
@@ -3486,7 +3604,7 @@
                                         if (context.parsed.y !== null) {
                                             label += context.parsed.y.toFixed(0) + (detailChartMode === 'NORM' ? '%' : '');
                                         }
-                                        const w = context.parsed.x + 1;
+                                        const w = parseInt(context.label, 10) || (context.parsed.x + 1);
                                         if (w === changeWk) label += ' [Increase Week]';
                                         if (w === maxWk) label += ' [Max A Week]';
                                         return label;
@@ -3574,7 +3692,24 @@
                         }
                     },
                     plugins: {
-                        legend: { display: false }
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: getThemeColors().tooltipBg,
+                            titleColor: getThemeColors().tooltipText,
+                            bodyColor: getThemeColors().tooltipText,
+                            borderColor: getThemeColors().tooltipBorder,
+                            borderWidth: 1,
+                            callbacks: {
+                                title: function(context) {
+                                    const w = parseInt(context[0].label, 10) || (context[0].parsed.x + 1);
+                                    const dateStr = getWeekBeginningDate(w);
+                                    return `Academic Week ${w}${dateStr ? ' (W/B ' + dateStr + ')' : ''}`;
+                                },
+                                label: function(context) {
+                                    return `Flagged Courses: ${context.parsed.y}`;
+                                }
+                            }
+                        }
                     },
                     scales: {
                         x: {
@@ -3719,8 +3854,9 @@
                             borderWidth: 1,
                             callbacks: {
                                 title: function(context) {
-                                    const w = context[0].parsed.x + 1;
-                                    return `Academic Week ${w}`;
+                                    const w = parseInt(context[0].label, 10) || (context[0].parsed.x + 1);
+                                    const dateStr = getWeekBeginningDate(w);
+                                    return `Academic Week ${w}${dateStr ? ' (W/B ' + dateStr + ')' : ''}`;
                                 },
                                 label: function(context) {
                                     let label = context.dataset.label.split(' (')[0] || '';
@@ -4556,7 +4692,8 @@
             rawData = {
                 totalRows: 150, // Simulated total rows
                 ftCount: syntheticCourses.length,
-                courses: syntheticCourses
+                courses: syntheticCourses,
+                weekHeaders: null
             };
 
             const statusBadge = document.getElementById('uploadStatus');
