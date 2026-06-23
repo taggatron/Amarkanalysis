@@ -1395,8 +1395,14 @@
 
                         <!-- 1. Overview Container (Repurposed detailIntro) -->
                         <div id="detailIntro" style="display: flex; flex-direction: column; gap: 1.25rem;">
-                            <div style="font-weight: 600; font-size: 0.95rem; color: white;">
-                                Overall Absence Trends Across All Courses
+                            <div class="flex-between">
+                                <div style="font-weight: 600; font-size: 0.95rem; color: var(--text-primary);">
+                                    Overall Absence Trends Across All Courses
+                                </div>
+                                <button class="btn btn-secondary" onclick="exportPDF()" style="padding: 0.4rem 0.75rem; font-size: 0.75rem; width: auto; display: flex; align-items: center; gap: 0.3rem;">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                                    Export PDF
+                                </button>
                             </div>
                             <!-- Overview Meta Grid -->
                             <div class="detail-meta-grid">
@@ -1434,11 +1440,17 @@
                         <!-- 2. Course-Specific Details Container -->
                         <div id="detailData" style="display: none; flex-direction: column; gap: 1.25rem;">
                             <div class="flex-between">
-                                <div style="font-weight: 600; font-size: 0.95rem; color: white; max-width: 60%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" id="detailCourseTitle">-</div>
-                                <button class="btn btn-secondary" onclick="clearCourseSelection()" style="padding: 0.4rem 0.75rem; font-size: 0.75rem; width: auto; display: flex; align-items: center; gap: 0.3rem;">
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
-                                    Overview Trend
-                                </button>
+                                <div style="font-weight: 600; font-size: 0.95rem; color: var(--text-primary); max-width: 50%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" id="detailCourseTitle">-</div>
+                                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                    <button class="btn btn-secondary" onclick="exportPDF()" style="padding: 0.4rem 0.75rem; font-size: 0.75rem; width: auto; display: flex; align-items: center; gap: 0.3rem;">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                                        Export PDF
+                                    </button>
+                                    <button class="btn btn-secondary" onclick="clearCourseSelection()" style="padding: 0.4rem 0.75rem; font-size: 0.75rem; width: auto; display: flex; align-items: center; gap: 0.3rem;">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                                        Overview Trend
+                                    </button>
+                                </div>
                             </div>
 
                             <!-- Metadata Grid -->
@@ -3687,6 +3699,420 @@
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+        }
+
+        // Export Report as a formatted PDF sheet (using native print dialog format)
+        function exportPDF() {
+            if (!rawData) {
+                alert("Please load data and run analysis first.");
+                return;
+            }
+
+            // Get parameter values
+            const baseline = document.getElementById('baselineWeeks').value;
+            const comparison = document.getElementById('comparisonWeeks').value;
+            const changeScore = document.getElementById('requiredIncrease').value + '%';
+            const minAvgAfter = document.getElementById('requiredAvgAfter').value + '%';
+            const sustainedLevel = document.getElementById('sustainedThreshold').value + '%';
+            const minSustained = document.getElementById('minSustainedWeeks').value;
+            const cutoff = document.getElementById('cutoffWeek').value;
+            const examCautious = document.getElementById('cautiousExam').checked ? 'Enabled' : 'Disabled';
+            const examStart = document.getElementById('examStart').value;
+            const examEnd = document.getElementById('examEnd').value;
+
+            // Get chart image from canvas
+            const chartCanvas = document.getElementById('courseDetailChart');
+            let chartImgHtml = '';
+            if (chartCanvas) {
+                try {
+                    const chartImgData = chartCanvas.toDataURL('image/png');
+                    chartImgHtml = `<img src="${chartImgData}" class="report-chart" alt="Absence Trend Chart" />`;
+                } catch (e) {
+                    console.error('Failed to export chart to image', e);
+                    chartImgHtml = `<div style="padding: 2rem; border: 1px dashed var(--border); border-radius: 8px; color: var(--text-secondary); text-align: center;">[Trend Chart Drawing Not Rendered]</div>`;
+                }
+            }
+
+            let reportTitle = '';
+            let reportContentHtml = '';
+
+            if (selectedCourseIndex === null) {
+                // Overview report
+                reportTitle = `Academic Absence Analysis Summary Report`;
+                const totalFt = document.getElementById('overviewTotalCourses').innerText;
+                const flagged = document.getElementById('overviewFlaggedCourses').innerText;
+                const unflagged = document.getElementById('overviewUnflaggedCourses').innerText;
+                const flaggedRatio = document.getElementById('overviewFlaggedRatio').innerText;
+                const highConf = document.getElementById('overviewHighConf').innerText;
+                const medLowConf = document.getElementById('overviewMedLowConf').innerText;
+
+                // Render flagged courses list
+                let tableRows = '';
+                flaggedCourses.forEach(c => {
+                    tableRows += `
+                        <tr>
+                            <td><strong>${c.code}</strong></td>
+                            <td>${c.courseTitle}</td>
+                            <td>${c.section}</td>
+                            <td style="text-align: center;">Week ${c.changeWeek}</td>
+                            <td style="text-align: right; font-weight: 600;">${(c.changeScore * 100).toFixed(0)}%</td>
+                            <td style="text-align: center;"><span class="pdf-badge pdf-badge-${c.confidence.toLowerCase()}">${c.confidence}</span></td>
+                        </tr>
+                    `;
+                });
+
+                reportContentHtml = `
+                    <h2>Summary Analysis Statistics</h2>
+                    <table class="report-meta-table">
+                        <tr>
+                            <th>Total FT Courses</th><td>${totalFt}</td>
+                            <th>Flagged Courses</th><td style="color: #db2777; font-weight: 700;">${flagged}</td>
+                        </tr>
+                        <tr>
+                            <th>Unflagged Courses</th><td style="color: #059669; font-weight: 700;">${unflagged}</td>
+                            <th>Flagged Ratio</th><td style="color: #7c3aed; font-weight: 700;">${flaggedRatio}</td>
+                        </tr>
+                        <tr>
+                            <th>High Confidence</th><td>${highConf}</td>
+                            <th>Medium/Low Confidence</th><td>${medLowConf}</td>
+                        </tr>
+                    </table>
+
+                    <div class="chart-section">
+                        <h2>Overall Absences Trend</h2>
+                        ${chartImgHtml}
+                    </div>
+
+                    <div style="margin-top: 2rem;">
+                        <h2>Flagged Courses Listing (${flaggedCourses.length} Courses)</h2>
+                        <table class="report-data-table">
+                            <thead>
+                                <tr>
+                                    <th>Code</th>
+                                    <th>Title</th>
+                                    <th>Section</th>
+                                    <th>Increase Wk</th>
+                                    <th>Change Score</th>
+                                    <th>Confidence</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${tableRows || '<tr><td colspan="6" style="text-align: center; color: var(--text-secondary);">No courses currently flagged.</td></tr>'}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            } else {
+                // Specific course report
+                const course = processedCourses[selectedCourseIndex];
+                reportTitle = `Course Absence Analysis Report: ${course.code}`;
+                
+                const section = document.getElementById('detailSection').innerText;
+                const group = document.getElementById('detailGroup').innerText;
+                const maxA = document.getElementById('detailMaxA').innerText;
+                const increaseWk = document.getElementById('detailIncreaseWk').innerText;
+                const changeScoreVal = document.getElementById('detailChangeScore').innerText;
+                const ratingText = course.isFlagged ? course.confidence : 'UNFLAGGED';
+                const reasonText = document.getElementById('detailReasonText').innerText;
+
+                // Warnings
+                let warningsHtml = '';
+                const warningsListItems = document.getElementById('detailWarningsList').children;
+                if (document.getElementById('detailWarningsContainer').style.display !== 'none' && warningsListItems.length > 0) {
+                    let items = '';
+                    for (let i = 0; i < warningsListItems.length; i++) {
+                        items += `<li>${warningsListItems[i].innerHTML}</li>`;
+                    }
+                    warningsHtml = `
+                        <div class="pdf-warning-box">
+                            <strong>False Positive Considerations:</strong>
+                            <ul>${items}</ul>
+                        </div>
+                    `;
+                }
+
+                reportContentHtml = `
+                    <h2>Course Specifications</h2>
+                    <table class="report-meta-table">
+                        <tr>
+                            <th>Course Title</th><td colspan="3"><strong>${course.courseTitle}</strong></td>
+                        </tr>
+                        <tr>
+                            <th>Section</th><td>${section}</td>
+                            <th>Group Description</th><td>${group}</td>
+                        </tr>
+                        <tr>
+                            <th>Max Absences / Week</th><td>${maxA}</td>
+                            <th>Increase Week (Academic)</th><td>${increaseWk}</td>
+                        </tr>
+                        <tr>
+                            <th>Change Score</th><td>${changeScoreVal}</td>
+                            <th>Confidence Rating</th><td>${ratingText}</td>
+                        </tr>
+                    </table>
+
+                    <div class="pdf-explanation-box" style="margin-top: 1rem;">
+                        <strong>Indicator Log:</strong> ${reasonText}
+                    </div>
+
+                    ${warningsHtml}
+
+                    <div class="chart-section">
+                        <h2>Absence Profile Timeline</h2>
+                        ${chartImgHtml}
+                    </div>
+                `;
+            }
+
+            // Combine into print window document
+            const printWindow = window.open('', '_blank');
+            if (!printWindow) {
+                alert('Please allow popups to export the PDF.');
+                return;
+            }
+
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html lang="en">
+                <head>
+                    <meta charset="UTF-8">
+                    <title>${reportTitle}</title>
+                    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+                    <style>
+                        :root {
+                            --primary: #7c3aed;
+                            --secondary: #db2777;
+                            --text-primary: #0f172a;
+                            --text-secondary: #475569;
+                            --border: #e2e8f0;
+                            --bg: #ffffff;
+                            --card-bg: #f8fafc;
+                        }
+
+                        * {
+                            box-sizing: border-box;
+                            margin: 0;
+                            padding: 0;
+                        }
+
+                        body {
+                            font-family: 'Outfit', sans-serif;
+                            color: var(--text-primary);
+                            background-color: var(--bg);
+                            line-height: 1.5;
+                            padding: 2.5rem;
+                            font-size: 0.9rem;
+                        }
+
+                        .report-header {
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: center;
+                            border-bottom: 2px solid var(--primary);
+                            padding-bottom: 1.5rem;
+                            margin-bottom: 2rem;
+                        }
+
+                        .brand-info h1 {
+                            font-size: 1.5rem;
+                            font-weight: 800;
+                            color: var(--text-primary);
+                        }
+
+                        .brand-info p {
+                            font-size: 0.8rem;
+                            color: var(--text-secondary);
+                        }
+
+                        .timestamp {
+                            text-align: right;
+                            font-size: 0.8rem;
+                            color: var(--text-secondary);
+                        }
+
+                        h2 {
+                            font-size: 1.15rem;
+                            font-weight: 700;
+                            color: var(--text-primary);
+                            margin-top: 1.5rem;
+                            margin-bottom: 0.75rem;
+                            border-left: 3px solid var(--primary);
+                            padding-left: 0.5rem;
+                        }
+
+                        .report-meta-table {
+                            width: 100%;
+                            border-collapse: collapse;
+                            margin-bottom: 1.5rem;
+                        }
+
+                        .report-meta-table th, .report-meta-table td {
+                            border: 1px solid var(--border);
+                            padding: 0.6rem 0.75rem;
+                            text-align: left;
+                        }
+
+                        .report-meta-table th {
+                            background-color: var(--card-bg);
+                            font-weight: 600;
+                            color: var(--text-secondary);
+                            width: 25%;
+                        }
+
+                        .pdf-explanation-box {
+                            background: rgba(124, 58, 237, 0.05);
+                            border-left: 3px solid var(--primary);
+                            padding: 0.8rem 1rem;
+                            border-radius: 0 8px 8px 0;
+                            font-size: 0.85rem;
+                            color: var(--text-primary);
+                            margin-bottom: 1.5rem;
+                        }
+
+                        .pdf-warning-box {
+                            background: rgba(219, 39, 119, 0.05);
+                            border-left: 3px solid var(--secondary);
+                            padding: 0.8rem 1rem;
+                            border-radius: 0 8px 8px 0;
+                            font-size: 0.85rem;
+                            color: var(--text-secondary);
+                            margin-bottom: 1.5rem;
+                        }
+
+                        .pdf-warning-box ul {
+                            margin-top: 0.4rem;
+                            padding-left: 1.25rem;
+                        }
+
+                        .chart-section {
+                            page-break-inside: avoid;
+                            margin-bottom: 2rem;
+                            text-align: center;
+                        }
+
+                        .report-chart {
+                            max-width: 100%;
+                            height: auto;
+                            border: 1px solid var(--border);
+                            border-radius: 12px;
+                            margin-top: 0.5rem;
+                            padding: 1rem;
+                            background: #ffffff;
+                        }
+
+                        .report-data-table {
+                            width: 100%;
+                            border-collapse: collapse;
+                            font-size: 0.8rem;
+                        }
+
+                        .report-data-table th, .report-data-table td {
+                            border: 1px solid var(--border);
+                            padding: 0.5rem 0.75rem;
+                            text-align: left;
+                        }
+
+                        .report-data-table th {
+                            background-color: var(--card-bg);
+                            font-weight: 600;
+                        }
+
+                        .pdf-badge {
+                            font-size: 0.7rem;
+                            font-weight: 700;
+                            padding: 0.15rem 0.35rem;
+                            border-radius: 4px;
+                            text-transform: uppercase;
+                        }
+
+                        .pdf-badge-high { background-color: rgba(5, 150, 105, 0.1); color: #059669; }
+                        .pdf-badge-medium { background-color: rgba(217, 119, 6, 0.1); color: #d97706; }
+                        .pdf-badge-low { background-color: rgba(220, 38, 38, 0.1); color: #dc2626; }
+
+                        .params-container {
+                            page-break-inside: avoid;
+                            background-color: var(--card-bg);
+                            border: 1px solid var(--border);
+                            border-radius: 12px;
+                            padding: 1rem 1.25rem;
+                            margin-top: 2rem;
+                        }
+
+                        .params-grid {
+                            display: grid;
+                            grid-template-columns: repeat(3, 1fr);
+                            gap: 0.75rem;
+                            font-size: 0.75rem;
+                            margin-top: 0.5rem;
+                        }
+
+                        .param-item {
+                            display: flex;
+                            flex-direction: column;
+                        }
+
+                        .param-label {
+                            color: var(--text-secondary);
+                            font-weight: 500;
+                        }
+
+                        .param-val {
+                            font-weight: 700;
+                        }
+
+                        @media print {
+                            body {
+                                padding: 0;
+                            }
+                            @page {
+                                margin: 20mm;
+                            }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="report-header">
+                        <div class="brand-info">
+                            <h1>A-Mark Analyzer</h1>
+                            <p>Academic Early Completion & Absence Escalation Report</p>
+                        </div>
+                        <div class="timestamp">
+                            <p>Report Generated:</p>
+                            <strong>${new Date().toLocaleString()}</strong>
+                        </div>
+                    </div>
+
+                    ${reportContentHtml}
+
+                    <div class="params-container">
+                        <h3 style="font-size: 0.95rem; font-weight: 700; border-bottom: 1px solid var(--border); padding-bottom: 0.3rem;">Reproducibility Threshold Parameters</h3>
+                        <div class="params-grid">
+                            <div class="param-item"><span class="param-label">Baseline Period:</span><span class="param-val">${baseline} Weeks</span></div>
+                            <div class="param-item"><span class="param-label">Comparison Period:</span><span class="param-val">${comparison} Weeks</span></div>
+                            <div class="param-item"><span class="param-label">Required Change Score:</span><span class="param-val">${changeScore}</span></div>
+                            <div class="param-item"><span class="param-label">Min Avg After:</span><span class="param-val">${minAvgAfter}</span></div>
+                            <div class="param-item"><span class="param-label">Sustained Threshold:</span><span class="param-val">${sustainedLevel}</span></div>
+                            <div class="param-item"><span class="param-label">Min Sustained Weeks:</span><span class="param-val">${minSustained} Weeks</span></div>
+                            <div class="param-item"><span class="param-label">Analysis Cutoff:</span><span class="param-val">Academic Week ${cutoff}</span></div>
+                            <div class="param-item"><span class="param-label">Cautious Exam-leave:</span><span class="param-val">${examCautious}</span></div>
+                            ${document.getElementById('cautiousExam').checked ? `
+                            <div class="param-item"><span class="param-label">Exam Window:</span><span class="param-val">Weeks ${examStart} - ${examEnd}</span></div>
+                            ` : ''}
+                        </div>
+                    </div>
+
+                    <script>
+                        // Auto-trigger print
+                        window.onload = function() {
+                            setTimeout(function() {
+                                window.print();
+                            }, 500);
+                        };
+                    <\/script>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
         }
 
         // Synthetic Test Data Generator for interactive preview

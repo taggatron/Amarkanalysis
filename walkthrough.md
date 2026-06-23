@@ -66,6 +66,11 @@ Courses matching the change-point criteria are assessed by a confidence logic en
    * Plots the selected course's absolute weekly absences (bar chart) and its normalized profile against the overall department/section average (line chart).
    * Annotates Term Breaks (Easter, May Half Term) with staggered vertical dashed lines.
    * Provides a "Return to Overview" button to switch back to the aggregate statistics chart.
+3. **PDF Export**:
+   * Generates a high-quality print-formatted report.
+   * If a course is selected: Compiles course metadata, step-up justification logs, false-positive caution checklists, active slider settings, and the course timeline chart.
+   * If no course is selected: Compiles division overview statistics, aggregate charts, a full flagged course table, and active slider settings.
+   * Generates base64 PNG snapshots of charts client-side and triggers the browser print dialog.
 
 ### Tab 2: Absence Trends & Section Insights
 1. **Flag Distribution by Week**:
@@ -95,3 +100,11 @@ Courses matching the change-point criteria are assessed by a confidence logic en
 2. **Load Web Interface**: Open `http://localhost:8000/amark_analysis.html` in a web browser.
 3. **Load Demo Data**: Click **Load Synthetic Demo Data** to populate the dashboard with simulated data representing different absence profiles, or upload your own student attendance CSV.
 4. **Drill Down**: Filter sections using the chart legend or dropdowns, and inspect outliers in the statistical testing card.
+
+---
+
+## 6. Theme Settings (Light & Dark Modes)
+* **Default Mode**: The dashboard defaults to a clean, bright Light Mode on first load for high visibility in typical office/meeting environments.
+* **Theme Switching**: A theme toggle button (featuring moon/sun SVG icons) in the sidebar header switches between Light and the original dark glassmorphism aesthetic.
+* **Persistence**: Theme settings are stored in the browser's `localStorage` and read by an inline blocking script immediately below the body tag, eliminating visual page flickering on refresh.
+* **Dynamic Chart Color Matching**: Chart.js labels, grid lines, tooltips, and background elements dynamically repaint when the theme changes to ensure optimal contrast in both modes.
