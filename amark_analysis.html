@@ -3771,7 +3771,43 @@
                     `;
                 });
 
+                // Calculate Peak Week of dramatic increase (Common Finish Week)
+                let peakWeekText = 'N/A';
+                if (flaggedCourses.length > 0) {
+                    const weekCounts = {};
+                    flaggedCourses.forEach(c => {
+                        const wk = c.changeWeek;
+                        weekCounts[wk] = (weekCounts[wk] || 0) + 1;
+                    });
+                    let maxCount = -1;
+                    let modeWeek = null;
+                    for (const wk in weekCounts) {
+                        if (weekCounts[wk] > maxCount) {
+                            maxCount = weekCounts[wk];
+                            modeWeek = wk;
+                        }
+                    }
+                    peakWeekText = modeWeek ? `Academic Week ${modeWeek}` : 'N/A';
+                }
+
+                const highCount = flaggedCourses.filter(c => c.confidence === 'HIGH').length;
+                const medCount = flaggedCourses.filter(c => c.confidence === 'MEDIUM').length;
+                const lowCount = flaggedCourses.filter(c => c.confidence === 'LOW').length;
+
                 reportContentHtml = `
+                    <div class="pdf-exec-summary">
+                        <div class="pdf-kpi-card green">
+                            <span class="pdf-kpi-label">Common Finish Week</span>
+                            <span class="pdf-kpi-value">${peakWeekText}</span>
+                            <span class="pdf-kpi-subtext">Peak week of dramatic increase</span>
+                        </div>
+                        <div class="pdf-kpi-card orange">
+                            <span class="pdf-kpi-label">Confidence Split</span>
+                            <span class="pdf-kpi-value">H: ${highCount} | M: ${medCount} | L: ${lowCount}</span>
+                            <span class="pdf-kpi-subtext">High, Medium, Low ratings</span>
+                        </div>
+                    </div>
+
                     <h2>Summary Analysis Statistics</h2>
                     <table class="report-meta-table">
                         <tr>
@@ -3948,6 +3984,63 @@
                             margin-bottom: 0.75rem;
                             border-left: 3px solid var(--primary);
                             padding-left: 0.5rem;
+                        }
+
+                        .pdf-exec-summary {
+                            display: grid;
+                            grid-template-columns: 1fr 1fr;
+                            gap: 1.5rem;
+                            margin-bottom: 2rem;
+                        }
+
+                        .pdf-kpi-card {
+                            background-color: #f8fafc;
+                            border: 1px solid #e2e8f0;
+                            border-radius: 16px;
+                            padding: 1.25rem 1.5rem;
+                            display: flex;
+                            flex-direction: column;
+                            position: relative;
+                            overflow: hidden;
+                        }
+
+                        .pdf-kpi-card::before {
+                            content: '';
+                            position: absolute;
+                            left: 0;
+                            top: 0;
+                            bottom: 0;
+                            width: 5px;
+                        }
+
+                        .pdf-kpi-card.green::before {
+                            background-color: #10b981;
+                        }
+
+                        .pdf-kpi-card.orange::before {
+                            background-color: #f59e0b;
+                        }
+
+                        .pdf-kpi-label {
+                            font-size: 0.7rem;
+                            font-weight: 700;
+                            text-transform: uppercase;
+                            letter-spacing: 0.05em;
+                            color: #475569;
+                            margin-bottom: 0.4rem;
+                        }
+
+                        .pdf-kpi-value {
+                            font-size: 1.8rem;
+                            font-weight: 800;
+                            color: #0f172a;
+                            line-height: 1.2;
+                            margin-bottom: 0.4rem;
+                        }
+
+                        .pdf-kpi-subtext {
+                            font-size: 0.8rem;
+                            color: #64748b;
                         }
 
                         .report-meta-table {
