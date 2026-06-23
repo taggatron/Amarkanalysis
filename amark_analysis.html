@@ -1362,7 +1362,7 @@
                 <!-- Exam Cautious Toggle -->
                 <div class="form-group" style="margin-top: 0.5rem;">
                     <label class="checkbox-group">
-                        <input type="checkbox" id="cautiousExam" checked onchange="toggleExamWeeksInput()">
+                        <input type="checkbox" id="cautiousExam" checked onchange="toggleExamWeeksInput(); runAnalysis()">
                         <span class="checkbox-label">Cautious Exam-Period Analysis</span>
                     </label>
                 </div>
@@ -1371,11 +1371,11 @@
                 <div class="form-row" id="examWeeksContainer">
                     <div class="form-group">
                         <div class="label-row"><span style="font-size: 0.75rem;">Exam Start Week</span></div>
-                        <input type="number" id="examStart" class="number-input" min="1" max="40" value="21">
+                        <input type="number" id="examStart" class="number-input" min="1" max="40" value="21" onchange="runAnalysis()">
                     </div>
                     <div class="form-group">
                         <div class="label-row"><span style="font-size: 0.75rem;">Exam End Week</span></div>
-                        <input type="number" id="examEnd" class="number-input" min="1" max="40" value="26">
+                        <input type="number" id="examEnd" class="number-input" min="1" max="40" value="26" onchange="runAnalysis()">
                     </div>
                 </div>
             </div>
@@ -3393,7 +3393,7 @@
             drawDetailChart();
         }
 
-        // Custom plugin to draw term boundaries (Pre-Easter at Week 26, Pre-May at Week 31)
+        // Custom plugin to draw term boundaries and GCSE exams (First & Last Exam)
         const termBordersPlugin = {
             id: 'termBorders',
             afterDatasetsDraw(chart) {
@@ -3403,24 +3403,30 @@
                 const { top, bottom, left, right } = chartArea;
                 ctx.save();
                 const isDark = document.body.classList.contains('theme-dark');
-                ctx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.45)' : 'rgba(0, 0, 0, 0.2)'; // Semi-transparent crisp white/dark
-                ctx.lineWidth = 1.2;
-                ctx.setLineDash([5, 5]);
+                
+                const termLineColor = isDark ? 'rgba(255, 255, 255, 0.45)' : 'rgba(0, 0, 0, 0.2)';
+                const termTextColor = isDark ? '#a5a1b8' : '#64748b';
+                
+                const examLineColor = isDark ? 'rgba(244, 63, 94, 0.7)' : 'rgba(225, 29, 72, 0.6)';
+                const examTextColor = isDark ? '#fda4af' : '#be123c';
+
+                const examStartVal = document.getElementById('examStart') ? parseInt(document.getElementById('examStart').value, 10) : 21;
+                const examEndVal = document.getElementById('examEnd') ? parseInt(document.getElementById('examEnd').value, 10) : 26;
 
                 const borders = [
-                    { idx: 25, label: 'Pre-Easter Break', yOffset: 12 },
-                    { idx: 30, label: 'Pre-May Half Term', yOffset: 26 }
+                    { idx: 25, label: 'Pre-Easter Break', yOffset: 12, lineColor: termLineColor, textColor: termTextColor, isExam: false },
+                    { idx: 30, label: 'Pre-May Half Term', yOffset: 26, lineColor: termLineColor, textColor: termTextColor, isExam: false },
+                    { idx: examStartVal - 1, label: 'First GCSE Exam', yOffset: 40, lineColor: examLineColor, textColor: examTextColor, isExam: true },
+                    { idx: examEndVal - 1, label: 'Last GCSE Exam', yOffset: 54, lineColor: examLineColor, textColor: examTextColor, isExam: true }
                 ];
 
                 borders.forEach(b => {
+                    if (b.idx < 0 || b.idx >= chart.data.labels.length) return;
                     const labelVal = chart.data.labels[b.idx];
-                    // Try numeric lookup first (if labels are stored as numbers)
                     let xPos = x.getPixelForValue(labelVal);
-                    // If NaN, try stringified lookup (if category scale converted them to strings)
                     if (isNaN(xPos) || xPos === undefined || xPos < left || xPos > right) {
                         xPos = x.getPixelForValue(String(labelVal));
                     }
-                    // If still NaN, fall back to index-based resolution
                     if (isNaN(xPos) || xPos === undefined || xPos < left || xPos > right) {
                         xPos = x.getPixelForValue(null, b.idx);
                     }
@@ -3428,12 +3434,24 @@
                         ctx.beginPath();
                         ctx.moveTo(xPos, top);
                         ctx.lineTo(xPos, bottom);
+                        
+                        ctx.strokeStyle = b.lineColor;
+                        ctx.lineWidth = b.isExam ? 1.5 : 1.2;
+                        ctx.setLineDash(b.isExam ? [4, 4] : [5, 5]);
                         ctx.stroke();
 
-                        ctx.fillStyle = isDark ? '#a5a1b8' : '#64748b';
-                        ctx.font = '9px Outfit, sans-serif';
+                        ctx.fillStyle = b.textColor;
+                        ctx.font = b.isExam ? 'bold 9px Outfit, sans-serif' : '9px Outfit, sans-serif';
                         ctx.textAlign = 'right';
-                        ctx.fillText(b.label, xPos - 5, top + b.yOffset);
+                        
+                        let labelText = b.label;
+                        if (b.isExam) {
+                            const dateStr = getWeekBeginningDate(b.idx + 1);
+                            if (dateStr) {
+                                labelText += ` (W/B ${dateStr})`;
+                            }
+                        }
+                        ctx.fillText(labelText, xPos - 5, top + b.yOffset);
                     }
                 });
                 ctx.restore();
