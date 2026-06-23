@@ -58,7 +58,7 @@
             --brand-text-color: linear-gradient(to right, #4c1d95, #7c3aed);
             --brand-title-color: #0f172a;
             --stats-metric-bg: rgba(0, 0, 0, 0.015);
-            
+
             /* Radial background filters */
             --bg-radial-1: rgba(124, 58, 237, 0.06);
             --bg-radial-2: rgba(219, 39, 119, 0.04);
@@ -105,7 +105,7 @@
             --brand-text-color: linear-gradient(to right, #ffffff, #cfa9ff);
             --brand-title-color: #ffffff;
             --stats-metric-bg: rgba(255, 255, 255, 0.02);
-            
+
             /* Radial background filters */
             --bg-radial-1: rgba(143, 67, 236, 0.15);
             --bg-radial-2: rgba(236, 72, 153, 0.1);
@@ -1125,6 +1125,7 @@
             background-color: rgba(15, 23, 42, 0.4);
             backdrop-filter: blur(8px);
             -webkit-backdrop-filter: blur(8px);
+
             @starting-style {
                 background-color: rgba(0, 0, 0, 0);
                 backdrop-filter: blur(0px);
@@ -1162,6 +1163,7 @@
                 transform: translate(-50%, -50%) translate3d(0, 0, 0);
                 transition-duration: 0.15s;
             }
+
             dialog#zoomModal[open] {
                 @starting-style {
                     transform: translate(-50%, -50%) translate3d(0, 0, 0);
@@ -1205,9 +1207,11 @@
         #zoomModalContent::-webkit-scrollbar {
             width: 6px;
         }
+
         #zoomModalContent::-webkit-scrollbar-track {
             background: transparent;
         }
+
         #zoomModalContent::-webkit-scrollbar-thumb {
             background: var(--btn-secondary-border);
             border-radius: 3px;
@@ -1231,7 +1235,7 @@
 <body>
     <script>
         // Apply theme immediately to prevent layout flashing
-        (function() {
+        (function () {
             const savedTheme = localStorage.getItem('theme') || 'light';
             if (savedTheme === 'dark') {
                 document.body.classList.add('theme-dark');
@@ -1254,7 +1258,8 @@
                     </div>
                 </div>
                 <button class="theme-toggle-btn" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle Theme">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
                         <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
                     </svg>
                 </button>
@@ -1362,7 +1367,8 @@
                 <!-- Exam Cautious Toggle -->
                 <div class="form-group" style="margin-top: 0.5rem;">
                     <label class="checkbox-group">
-                        <input type="checkbox" id="cautiousExam" checked onchange="toggleExamWeeksInput(); runAnalysis()">
+                        <input type="checkbox" id="cautiousExam" checked
+                            onchange="toggleExamWeeksInput(); runAnalysis()">
                         <span class="checkbox-label">Cautious Exam-Period Analysis</span>
                     </label>
                 </div>
@@ -1371,11 +1377,13 @@
                 <div class="form-row" id="examWeeksContainer">
                     <div class="form-group">
                         <div class="label-row"><span style="font-size: 0.75rem;">Exam Start Week</span></div>
-                        <input type="number" id="examStart" class="number-input" min="1" max="40" value="21" onchange="runAnalysis()">
+                        <input type="number" id="examStart" class="number-input" min="1" max="40" value="30"
+                            onchange="runAnalysis()">
                     </div>
                     <div class="form-group">
                         <div class="label-row"><span style="font-size: 0.75rem;">Exam End Week</span></div>
-                        <input type="number" id="examEnd" class="number-input" min="1" max="40" value="26" onchange="runAnalysis()">
+                        <input type="number" id="examEnd" class="number-input" min="1" max="40" value="33"
+                            onchange="runAnalysis()">
                     </div>
                 </div>
             </div>
@@ -1470,7 +1478,8 @@
                         <div class="card-header">
                             <h3 class="card-title" id="cardTitleText">Flagged Courses</h3>
                             <div class="card-actions">
-                                <select id="filterFlagged" class="number-input" style="width: 130px;" onchange="renderResultsTable()">
+                                <select id="filterFlagged" class="number-input" style="width: 130px;"
+                                    onchange="renderResultsTable()">
                                     <option value="FLAGGED">Flagged Only</option>
                                     <option value="ALL">All Courses</option>
                                     <option value="UNFLAGGED">Unflagged Only</option>
@@ -1491,8 +1500,10 @@
                                         <line x1="12" y1="15" x2="12" y2="3"></line>
                                     </svg> Export CSV
                                 </button>
-                                <button class="card-zoom-btn" onclick="openZoom('cardResultsTable')" title="Zoom container">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <button class="card-zoom-btn" onclick="openZoom('cardResultsTable')"
+                                    title="Zoom container">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                         <polyline points="15 3 21 3 21 9"></polyline>
                                         <polyline points="9 21 3 21 3 15"></polyline>
                                         <line x1="21" y1="3" x2="14" y2="10"></line>
@@ -1503,13 +1514,20 @@
                         </div>
 
                         <!-- Overview Ratio Progress Bar -->
-                        <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; padding: 0.75rem 1rem; display: flex; flex-direction: column; gap: 0.4rem;">
+                        <div
+                            style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; padding: 0.75rem 1rem; display: flex; flex-direction: column; gap: 0.4rem;">
                             <div class="flex-between" style="font-size: 0.8rem;">
-                                <span style="font-weight: 600; color: var(--text-secondary);">Courses Flagged Ratio</span>
-                                <span id="overviewProgressBarText" style="color: var(--secondary); font-weight: 700; font-family: monospace;">0 / 0 (0.0%)</span>
+                                <span style="font-weight: 600; color: var(--text-secondary);">Courses Flagged
+                                    Ratio</span>
+                                <span id="overviewProgressBarText"
+                                    style="color: var(--secondary); font-weight: 700; font-family: monospace;">0 / 0
+                                    (0.0%)</span>
                             </div>
-                            <div style="width: 100%; height: 6px; background: rgba(255,255,255,0.08); border-radius: 3px; overflow: hidden; display: flex;">
-                                <div id="overviewProgressBarFlagged" style="width: 0%; height: 100%; background: linear-gradient(to right, var(--primary), var(--secondary)); transition: width 0.4s ease;"></div>
+                            <div
+                                style="width: 100%; height: 6px; background: rgba(255,255,255,0.08); border-radius: 3px; overflow: hidden; display: flex;">
+                                <div id="overviewProgressBarFlagged"
+                                    style="width: 0%; height: 100%; background: linear-gradient(to right, var(--primary), var(--secondary)); transition: width 0.4s ease;">
+                                </div>
                             </div>
                         </div>
 
@@ -1560,14 +1578,16 @@
                         <div class="card-header">
                             <h3 class="card-title text-gradient" id="detailCourseCode">All Courses Overview</h3>
                             <div style="display: flex; align-items: center; gap: 0.75rem;">
-                                <div class="chart-toggle-group" id="detailChartToggles" style="display: none; margin-right: 0;">
+                                <div class="chart-toggle-group" id="detailChartToggles"
+                                    style="display: none; margin-right: 0;">
                                     <button class="chart-toggle-btn active" id="btnChartRaw"
                                         onclick="toggleDetailChartMode('RAW')">Raw A Marks</button>
                                     <button class="chart-toggle-btn" id="btnChartNorm"
                                         onclick="toggleDetailChartMode('NORM')">Normalized %</button>
                                 </div>
                                 <button class="card-zoom-btn" onclick="openZoom('detailPanel')" title="Zoom container">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                         <polyline points="15 3 21 3 21 9"></polyline>
                                         <polyline points="9 21 3 21 3 15"></polyline>
                                         <line x1="21" y1="3" x2="14" y2="10"></line>
@@ -1583,8 +1603,16 @@
                                 <div style="font-weight: 600; font-size: 0.95rem; color: var(--text-primary);">
                                     Overall Absence Trends Across All Courses
                                 </div>
-                                <button class="btn btn-secondary" onclick="exportPDF()" style="padding: 0.4rem 0.75rem; font-size: 0.75rem; width: auto; display: flex; align-items: center; gap: 0.3rem;">
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                                <button class="btn btn-secondary" onclick="exportPDF()"
+                                    style="padding: 0.4rem 0.75rem; font-size: 0.75rem; width: auto; display: flex; align-items: center; gap: 0.3rem;">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                        <polyline points="14 2 14 8 20 8"></polyline>
+                                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                                        <polyline points="10 9 9 9 8 9"></polyline>
+                                    </svg>
                                     Export PDF
                                 </button>
                             </div>
@@ -1596,11 +1624,13 @@
                                 </div>
                                 <div class="meta-item">
                                     <div class="meta-label">Flagged Courses</div>
-                                    <div class="meta-value" id="overviewFlaggedCourses" style="color: var(--secondary);">-</div>
+                                    <div class="meta-value" id="overviewFlaggedCourses"
+                                        style="color: var(--secondary);">-</div>
                                 </div>
                                 <div class="meta-item">
                                     <div class="meta-label">Unflagged Courses</div>
-                                    <div class="meta-value" id="overviewUnflaggedCourses" style="color: var(--success);">-</div>
+                                    <div class="meta-value" id="overviewUnflaggedCourses"
+                                        style="color: var(--success);">-</div>
                                 </div>
                                 <div class="meta-item">
                                     <div class="meta-label">Flagged Ratio</div>
@@ -1615,23 +1645,41 @@
                                     <div class="meta-value" id="overviewMedLowConf">-</div>
                                 </div>
                             </div>
-                            
+
                             <div class="explanation-box" style="margin-top: 0;">
-                                <strong>Aggregate Trend:</strong> The line chart below displays the average weekly academic absences (A marks) across all courses in the dataset. Use this to identify division-wide trends, and click on individual course rows in the table to drill down.
+                                <strong>Aggregate Trend:</strong> The line chart below displays the average weekly
+                                academic absences (A marks) across all courses in the dataset. Use this to identify
+                                division-wide trends, and click on individual course rows in the table to drill down.
                             </div>
                         </div>
 
                         <!-- 2. Course-Specific Details Container -->
                         <div id="detailData" style="display: none; flex-direction: column; gap: 1.25rem;">
                             <div class="flex-between">
-                                <div style="font-weight: 600; font-size: 0.95rem; color: var(--text-primary); max-width: 50%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" id="detailCourseTitle">-</div>
+                                <div style="font-weight: 600; font-size: 0.95rem; color: var(--text-primary); max-width: 50%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"
+                                    id="detailCourseTitle">-</div>
                                 <div style="display: flex; gap: 0.5rem; align-items: center;">
-                                    <button class="btn btn-secondary" onclick="exportPDF()" style="padding: 0.4rem 0.75rem; font-size: 0.75rem; width: auto; display: flex; align-items: center; gap: 0.3rem;">
-                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                                    <button class="btn btn-secondary" onclick="exportPDF()"
+                                        style="padding: 0.4rem 0.75rem; font-size: 0.75rem; width: auto; display: flex; align-items: center; gap: 0.3rem;">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                            stroke-linejoin="round">
+                                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                            <polyline points="14 2 14 8 20 8"></polyline>
+                                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                                            <polyline points="10 9 9 9 8 9"></polyline>
+                                        </svg>
                                         Export PDF
                                     </button>
-                                    <button class="btn btn-secondary" onclick="clearCourseSelection()" style="padding: 0.4rem 0.75rem; font-size: 0.75rem; width: auto; display: flex; align-items: center; gap: 0.3rem;">
-                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                                    <button class="btn btn-secondary" onclick="clearCourseSelection()"
+                                        style="padding: 0.4rem 0.75rem; font-size: 0.75rem; width: auto; display: flex; align-items: center; gap: 0.3rem;">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                            stroke-linejoin="round">
+                                            <line x1="19" y1="12" x2="5" y2="12"></line>
+                                            <polyline points="12 19 5 12 12 5"></polyline>
+                                        </svg>
                                         Overview Trend
                                     </button>
                                 </div>
@@ -1718,8 +1766,10 @@
                                 Flag Distribution by Week
                             </h3>
                             <div class="card-actions">
-                                <button class="card-zoom-btn" onclick="openZoom('cardFlagDistribution')" title="Zoom container">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <button class="card-zoom-btn" onclick="openZoom('cardFlagDistribution')"
+                                    title="Zoom container">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                         <polyline points="15 3 21 3 21 9"></polyline>
                                         <polyline points="9 21 3 21 3 15"></polyline>
                                         <line x1="21" y1="3" x2="14" y2="10"></line>
@@ -1768,8 +1818,10 @@
                                     onchange="updateSectionChart()">
                                     <option value="ALL">All Sections</option>
                                 </select>
-                                <button class="card-zoom-btn" onclick="openZoom('cardSectionTrends')" title="Zoom container">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <button class="card-zoom-btn" onclick="openZoom('cardSectionTrends')"
+                                    title="Zoom container">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                         <polyline points="15 3 21 3 21 9"></polyline>
                                         <polyline points="9 21 3 21 3 15"></polyline>
                                         <line x1="21" y1="3" x2="14" y2="10"></line>
@@ -1790,18 +1842,31 @@
                     </div>
 
                     <!-- Selected Week Details Card -->
-                    <div id="selectedWeekDetailCard" class="dashboard-card" style="display: none; grid-column: 1 / -1; margin-top: 1rem;">
+                    <div id="selectedWeekDetailCard" class="dashboard-card"
+                        style="display: none; grid-column: 1 / -1; margin-top: 1rem;">
                         <div class="card-header">
                             <h3 class="card-title">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="stroke: var(--accent);"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                    style="stroke: var(--accent);">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                    <polyline points="14 2 14 8 20 8"></polyline>
+                                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                                    <polyline points="10 9 9 9 8 9"></polyline>
+                                </svg>
                                 Flagged Courses Details: Academic Week <span id="selectedWeekNumberLabel">-</span>
                             </h3>
                             <div class="card-actions">
-                                <button class="btn-secondary" style="padding: 0.25rem 0.6rem; font-size: 0.8rem; margin: 0; width: auto;" onclick="closeSelectedWeekCourses()">
+                                <button class="btn-secondary"
+                                    style="padding: 0.25rem 0.6rem; font-size: 0.8rem; margin: 0; width: auto;"
+                                    onclick="closeSelectedWeekCourses()">
                                     Close View
                                 </button>
-                                <button class="card-zoom-btn" onclick="openZoom('selectedWeekDetailCard')" title="Zoom container">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <button class="card-zoom-btn" onclick="openZoom('selectedWeekDetailCard')"
+                                    title="Zoom container">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                         <polyline points="15 3 21 3 21 9"></polyline>
                                         <polyline points="9 21 3 21 3 15"></polyline>
                                         <line x1="21" y1="3" x2="14" y2="10"></line>
@@ -1810,8 +1875,10 @@
                                 </button>
                             </div>
                         </div>
-                        <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: -0.5rem; margin-bottom: 1rem;">
-                            Click a row to select the course and automatically view its detailed trends and charts on the Flagged Courses tab.
+                        <p
+                            style="font-size: 0.8rem; color: var(--text-secondary); margin-top: -0.5rem; margin-bottom: 1rem;">
+                            Click a row to select the course and automatically view its detailed trends and charts on
+                            the Flagged Courses tab.
                         </p>
                         <div class="table-container" style="max-height: 250px; overflow-y: auto;">
                             <table>
@@ -1847,11 +1914,14 @@
                                 Statistical Significance Outlier Testing (Welch's t-test)
                             </h3>
                             <div style="display: flex; align-items: center; gap: 0.75rem;">
-                                <div class="card-actions" id="statsSectionBadge" style="font-size: 0.8rem; font-weight: 600; padding: 0.25rem 0.6rem; border-radius: 4px; background: rgba(255,255,255,0.06); color: var(--text-primary); margin-right: 0;">
+                                <div class="card-actions" id="statsSectionBadge"
+                                    style="font-size: 0.8rem; font-weight: 600; padding: 0.25rem 0.6rem; border-radius: 4px; background: rgba(255,255,255,0.06); color: var(--text-primary); margin-right: 0;">
                                     All Sections
                                 </div>
-                                <button class="card-zoom-btn" onclick="openZoom('cardOutlierTest')" title="Zoom container">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <button class="card-zoom-btn" onclick="openZoom('cardOutlierTest')"
+                                    title="Zoom container">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                         <polyline points="15 3 21 3 21 9"></polyline>
                                         <polyline points="9 21 3 21 3 15"></polyline>
                                         <line x1="21" y1="3" x2="14" y2="10"></line>
@@ -1861,93 +1931,146 @@
                             </div>
                         </div>
                         <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: -0.5rem;">
-                            Compares the selected section against all other sections combined using Welch's t-test (two-tailed). This test evaluates whether the selected section has statistically different absence dynamics.
+                            Compares the selected section against all other sections combined using Welch's t-test
+                            (two-tailed). This test evaluates whether the selected section has statistically different
+                            absence dynamics.
                         </p>
-                        
+
                         <div id="statsSectionOverview" style="display: none; margin-top: 1rem;">
-                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
+                            <div
+                                style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
                                 <!-- Metric 1: Total absences % of Max -->
-                                <div class="stats-metric-card" style="padding: 1rem; border-radius: 8px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04);">
-                                    <h4 style="margin: 0 0 0.5rem 0; font-size: 0.9rem; color: var(--text-primary);">Mean Total Absences (% of Max)</h4>
+                                <div class="stats-metric-card"
+                                    style="padding: 1rem; border-radius: 8px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04);">
+                                    <h4 style="margin: 0 0 0.5rem 0; font-size: 0.9rem; color: var(--text-primary);">
+                                        Mean Total Absences (% of Max)</h4>
                                     <table style="width: 100%; font-size: 0.8rem; border-collapse: collapse;">
                                         <tr>
-                                            <td style="padding: 0.25rem 0; color: var(--text-secondary);">This Section:</td>
-                                            <td id="statsTotalMeanSec" style="padding: 0.25rem 0; text-align: right; font-weight: 600; color: var(--text-primary);">-</td>
+                                            <td style="padding: 0.25rem 0; color: var(--text-secondary);">This Section:
+                                            </td>
+                                            <td id="statsTotalMeanSec"
+                                                style="padding: 0.25rem 0; text-align: right; font-weight: 600; color: var(--text-primary);">
+                                                -</td>
                                         </tr>
                                         <tr>
-                                            <td style="padding: 0.25rem 0; color: var(--text-secondary);">Other Sections:</td>
-                                            <td id="statsTotalMeanOthers" style="padding: 0.25rem 0; text-align: right; font-weight: 600; color: var(--text-primary);">-</td>
+                                            <td style="padding: 0.25rem 0; color: var(--text-secondary);">Other
+                                                Sections:</td>
+                                            <td id="statsTotalMeanOthers"
+                                                style="padding: 0.25rem 0; text-align: right; font-weight: 600; color: var(--text-primary);">
+                                                -</td>
                                         </tr>
                                         <tr>
-                                            <td style="padding: 0.25rem 0; color: var(--text-secondary);">t-Statistic:</td>
-                                            <td id="statsTotalT" style="padding: 0.25rem 0; text-align: right; font-family: monospace; color: var(--text-primary);">-</td>
+                                            <td style="padding: 0.25rem 0; color: var(--text-secondary);">t-Statistic:
+                                            </td>
+                                            <td id="statsTotalT"
+                                                style="padding: 0.25rem 0; text-align: right; font-family: monospace; color: var(--text-primary);">
+                                                -</td>
                                         </tr>
                                         <tr style="border-top: 1px dashed rgba(255,255,255,0.1);">
-                                            <td style="padding: 0.4rem 0 0 0; font-weight: 600; color: var(--text-primary);">p-Value:</td>
-                                            <td id="statsTotalP" style="padding: 0.4rem 0 0 0; text-align: right; font-weight: 700; font-family: monospace; color: var(--text-primary);">-</td>
+                                            <td
+                                                style="padding: 0.4rem 0 0 0; font-weight: 600; color: var(--text-primary);">
+                                                p-Value:</td>
+                                            <td id="statsTotalP"
+                                                style="padding: 0.4rem 0 0 0; text-align: right; font-weight: 700; font-family: monospace; color: var(--text-primary);">
+                                                -</td>
                                         </tr>
                                     </table>
-                                    <div id="statsTotalVerdict" style="margin-top: 0.8rem; font-size: 0.75rem; padding: 0.35rem 0.5rem; border-radius: 4px; text-align: center; font-weight: 600;">
+                                    <div id="statsTotalVerdict"
+                                        style="margin-top: 0.8rem; font-size: 0.75rem; padding: 0.35rem 0.5rem; border-radius: 4px; text-align: center; font-weight: 600;">
                                         -
                                     </div>
                                 </div>
 
                                 <!-- Metric 2: Post-increase absences % of Max -->
-                                <div class="stats-metric-card" style="padding: 1rem; border-radius: 8px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04);">
-                                    <h4 style="margin: 0 0 0.5rem 0; font-size: 0.9rem; color: var(--text-primary);">Mean Post-Increase Level (% of Max)</h4>
+                                <div class="stats-metric-card"
+                                    style="padding: 1rem; border-radius: 8px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04);">
+                                    <h4 style="margin: 0 0 0.5rem 0; font-size: 0.9rem; color: var(--text-primary);">
+                                        Mean Post-Increase Level (% of Max)</h4>
                                     <table style="width: 100%; font-size: 0.8rem; border-collapse: collapse;">
                                         <tr>
-                                            <td style="padding: 0.25rem 0; color: var(--text-secondary);">This Section:</td>
-                                            <td id="statsMaxMeanSec" style="padding: 0.25rem 0; text-align: right; font-weight: 600; color: var(--text-primary);">-</td>
+                                            <td style="padding: 0.25rem 0; color: var(--text-secondary);">This Section:
+                                            </td>
+                                            <td id="statsMaxMeanSec"
+                                                style="padding: 0.25rem 0; text-align: right; font-weight: 600; color: var(--text-primary);">
+                                                -</td>
                                         </tr>
                                         <tr>
-                                            <td style="padding: 0.25rem 0; color: var(--text-secondary);">Other Sections:</td>
-                                            <td id="statsMaxMeanOthers" style="padding: 0.25rem 0; text-align: right; font-weight: 600; color: var(--text-primary);">-</td>
+                                            <td style="padding: 0.25rem 0; color: var(--text-secondary);">Other
+                                                Sections:</td>
+                                            <td id="statsMaxMeanOthers"
+                                                style="padding: 0.25rem 0; text-align: right; font-weight: 600; color: var(--text-primary);">
+                                                -</td>
                                         </tr>
                                         <tr>
-                                            <td style="padding: 0.25rem 0; color: var(--text-secondary);">t-Statistic:</td>
-                                            <td id="statsMaxT" style="padding: 0.25rem 0; text-align: right; font-family: monospace; color: var(--text-primary);">-</td>
+                                            <td style="padding: 0.25rem 0; color: var(--text-secondary);">t-Statistic:
+                                            </td>
+                                            <td id="statsMaxT"
+                                                style="padding: 0.25rem 0; text-align: right; font-family: monospace; color: var(--text-primary);">
+                                                -</td>
                                         </tr>
                                         <tr style="border-top: 1px dashed rgba(255,255,255,0.1);">
-                                            <td style="padding: 0.4rem 0 0 0; font-weight: 600; color: var(--text-primary);">p-Value:</td>
-                                            <td id="statsMaxP" style="padding: 0.4rem 0 0 0; text-align: right; font-weight: 700; font-family: monospace; color: var(--text-primary);">-</td>
+                                            <td
+                                                style="padding: 0.4rem 0 0 0; font-weight: 600; color: var(--text-primary);">
+                                                p-Value:</td>
+                                            <td id="statsMaxP"
+                                                style="padding: 0.4rem 0 0 0; text-align: right; font-weight: 700; font-family: monospace; color: var(--text-primary);">
+                                                -</td>
                                         </tr>
                                     </table>
-                                    <div id="statsMaxVerdict" style="margin-top: 0.8rem; font-size: 0.75rem; padding: 0.35rem 0.5rem; border-radius: 4px; text-align: center; font-weight: 600;">
+                                    <div id="statsMaxVerdict"
+                                        style="margin-top: 0.8rem; font-size: 0.75rem; padding: 0.35rem 0.5rem; border-radius: 4px; text-align: center; font-weight: 600;">
                                         -
                                     </div>
                                 </div>
 
                                 <!-- Metric 3: Change score Escalation % -->
-                                <div class="stats-metric-card" style="padding: 1rem; border-radius: 8px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04);">
-                                    <h4 style="margin: 0 0 0.5rem 0; font-size: 0.9rem; color: var(--text-primary);">Mean Change Score (Escalation %)</h4>
+                                <div class="stats-metric-card"
+                                    style="padding: 1rem; border-radius: 8px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04);">
+                                    <h4 style="margin: 0 0 0.5rem 0; font-size: 0.9rem; color: var(--text-primary);">
+                                        Mean Change Score (Escalation %)</h4>
                                     <table style="width: 100%; font-size: 0.8rem; border-collapse: collapse;">
                                         <tr>
-                                            <td style="padding: 0.25rem 0; color: var(--text-secondary);">This Section:</td>
-                                            <td id="statsChangeMeanSec" style="padding: 0.25rem 0; text-align: right; font-weight: 600; color: var(--text-primary);">-</td>
+                                            <td style="padding: 0.25rem 0; color: var(--text-secondary);">This Section:
+                                            </td>
+                                            <td id="statsChangeMeanSec"
+                                                style="padding: 0.25rem 0; text-align: right; font-weight: 600; color: var(--text-primary);">
+                                                -</td>
                                         </tr>
                                         <tr>
-                                            <td style="padding: 0.25rem 0; color: var(--text-secondary);">Other Sections:</td>
-                                            <td id="statsChangeMeanOthers" style="padding: 0.25rem 0; text-align: right; font-weight: 600; color: var(--text-primary);">-</td>
+                                            <td style="padding: 0.25rem 0; color: var(--text-secondary);">Other
+                                                Sections:</td>
+                                            <td id="statsChangeMeanOthers"
+                                                style="padding: 0.25rem 0; text-align: right; font-weight: 600; color: var(--text-primary);">
+                                                -</td>
                                         </tr>
                                         <tr>
-                                            <td style="padding: 0.25rem 0; color: var(--text-secondary);">t-Statistic:</td>
-                                            <td id="statsChangeT" style="padding: 0.25rem 0; text-align: right; font-family: monospace; color: var(--text-primary);">-</td>
+                                            <td style="padding: 0.25rem 0; color: var(--text-secondary);">t-Statistic:
+                                            </td>
+                                            <td id="statsChangeT"
+                                                style="padding: 0.25rem 0; text-align: right; font-family: monospace; color: var(--text-primary);">
+                                                -</td>
                                         </tr>
                                         <tr style="border-top: 1px dashed rgba(255,255,255,0.1);">
-                                            <td style="padding: 0.4rem 0 0 0; font-weight: 600; color: var(--text-primary);">p-Value:</td>
-                                            <td id="statsChangeP" style="padding: 0.4rem 0 0 0; text-align: right; font-weight: 700; font-family: monospace; color: var(--text-primary);">-</td>
+                                            <td
+                                                style="padding: 0.4rem 0 0 0; font-weight: 600; color: var(--text-primary);">
+                                                p-Value:</td>
+                                            <td id="statsChangeP"
+                                                style="padding: 0.4rem 0 0 0; text-align: right; font-weight: 700; font-family: monospace; color: var(--text-primary);">
+                                                -</td>
                                         </tr>
                                     </table>
-                                    <div id="statsChangeVerdict" style="margin-top: 0.8rem; font-size: 0.75rem; padding: 0.35rem 0.5rem; border-radius: 4px; text-align: center; font-weight: 600;">
+                                    <div id="statsChangeVerdict"
+                                        style="margin-top: 0.8rem; font-size: 0.75rem; padding: 0.35rem 0.5rem; border-radius: 4px; text-align: center; font-weight: 600;">
                                         -
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        
-                        <div id="statsEmptyState" style="padding: 3rem 2rem; text-align: center; color: var(--text-secondary); font-size: 0.9rem;">
-                            Select a specific section from the dropdown above or click a legend line to run statistical significance outlier tests.
+
+                        <div id="statsEmptyState"
+                            style="padding: 3rem 2rem; text-align: center; color: var(--text-secondary); font-size: 0.9rem;">
+                            Select a specific section from the dropdown above or click a legend line to run statistical
+                            significance outlier tests.
                         </div>
                     </div>
                 </div>
@@ -2000,14 +2123,14 @@
         function formatDateString(dateStr) {
             if (!dateStr) return '';
             const s = dateStr.toString().trim();
-            
+
             // Try to match DD/MM/YYYY or DD/MM/YY or with hyphens
             const parts = s.split(/[\/\-]/);
             if (parts.length === 3) {
                 let day = parseInt(parts[0], 10);
                 let month = parseInt(parts[1], 10);
                 let year = parseInt(parts[2], 10);
-                
+
                 if (!isNaN(day) && !isNaN(month) && !isNaN(year)) {
                     if (month > 12 && day <= 12) {
                         const temp = day;
@@ -2085,7 +2208,7 @@
             if (rawData && rawData.courses && rawData.courses.length > 0) {
                 sessionStr = rawData.courses[0].session || '';
             }
-            
+
             let startYear = 2025; // Default fallback
             if (sessionStr) {
                 const match = sessionStr.match(/(\d{4})/);
@@ -2108,7 +2231,7 @@
             const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
             const month = months[targetDate.getMonth()];
             const year = targetDate.getFullYear();
-            
+
             return `${day} ${month} ${year}`;
         }
 
@@ -2262,7 +2385,7 @@
                 document.body.classList.remove('theme-dark');
             }
             updateThemeToggleButton(theme);
-            
+
             // Re-draw active charts to update grid/axis colors
             if (rawData) {
                 drawDetailChart();
@@ -2280,7 +2403,7 @@
         function updateThemeToggleButton(theme) {
             const btn = document.getElementById('themeToggle');
             if (!btn) return;
-            
+
             if (theme === 'dark') {
                 btn.innerHTML = `
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -2734,7 +2857,7 @@
                 // Calculate maxWeeklyAMarks up to cutoff week (in academic weeks)
                 const activeAcademicMarks = course.academicWeeklyMarks.slice(0, pCutoffWeek);
                 const maxA = activeAcademicMarks.length > 0 ? Math.max(...activeAcademicMarks) : 0;
-                
+
                 // Override maxWeeklyAMarks for consistency
                 course.maxWeeklyAMarks = maxA;
 
@@ -3093,7 +3216,7 @@
         // Filter, search, and sort helper
         function getFilteredCourses() {
             const filterFlaggedVal = document.getElementById('filterFlagged') ? document.getElementById('filterFlagged').value : 'FLAGGED';
-            
+
             let list = [];
             if (filterFlaggedVal === 'FLAGGED') {
                 list = processedCourses.filter(c => c.isFlagged);
@@ -3325,7 +3448,7 @@
             document.getElementById('detailSection').innerText = course.section || 'Unknown';
             document.getElementById('detailGroup').innerText = course.groupDesc || 'N/A';
             document.getElementById('detailMaxA').innerText = `${course.maxWeeklyAMarks} (Academic Week ${course.maxWeek})`;
-            
+
             if (course.isFlagged) {
                 document.getElementById('detailIncreaseWk').innerText = `Academic Week ${course.changeWeek} (${course.academicWeeklyMarks[course.changeWeek - 1]} A)`;
                 document.getElementById('detailChangeScore').innerText = `+${(course.changeScore * 100).toFixed(0)}%`;
@@ -3335,7 +3458,7 @@
                 confBadge.innerText = course.confidence;
 
                 document.getElementById('detailReasonText').innerText = course.reason;
-                
+
                 // Warnings trigger
                 const wContainer = document.getElementById('detailWarningsContainer');
                 const wList = document.getElementById('detailWarningsList');
@@ -3360,7 +3483,7 @@
                 confBadge.innerText = 'UNFLAGGED';
 
                 document.getElementById('detailReasonText').innerText = course.reason;
-                
+
                 const wContainer = document.getElementById('detailWarningsContainer');
                 wContainer.style.display = 'none';
             }
@@ -3403,15 +3526,15 @@
                 const { top, bottom, left, right } = chartArea;
                 ctx.save();
                 const isDark = document.body.classList.contains('theme-dark');
-                
+
                 const termLineColor = isDark ? 'rgba(255, 255, 255, 0.45)' : 'rgba(0, 0, 0, 0.2)';
                 const termTextColor = isDark ? '#a5a1b8' : '#64748b';
-                
+
                 const examLineColor = isDark ? 'rgba(244, 63, 94, 0.7)' : 'rgba(225, 29, 72, 0.6)';
                 const examTextColor = isDark ? '#fda4af' : '#be123c';
 
-                const examStartVal = document.getElementById('examStart') ? parseInt(document.getElementById('examStart').value, 10) : 21;
-                const examEndVal = document.getElementById('examEnd') ? parseInt(document.getElementById('examEnd').value, 10) : 26;
+                const examStartVal = document.getElementById('examStart') ? parseInt(document.getElementById('examStart').value, 10) : 30;
+                const examEndVal = document.getElementById('examEnd') ? parseInt(document.getElementById('examEnd').value, 10) : 33;
 
                 const borders = [
                     { idx: 25, label: 'Pre-Easter Break', yOffset: 12, lineColor: termLineColor, textColor: termTextColor, isExam: false },
@@ -3434,7 +3557,7 @@
                         ctx.beginPath();
                         ctx.moveTo(xPos, top);
                         ctx.lineTo(xPos, bottom);
-                        
+
                         ctx.strokeStyle = b.lineColor;
                         ctx.lineWidth = b.isExam ? 1.5 : 1.2;
                         ctx.setLineDash(b.isExam ? [4, 4] : [5, 5]);
@@ -3443,7 +3566,7 @@
                         ctx.fillStyle = b.textColor;
                         ctx.font = b.isExam ? 'bold 9px Outfit, sans-serif' : '9px Outfit, sans-serif';
                         ctx.textAlign = 'right';
-                        
+
                         let labelText = b.label;
                         if (b.isExam) {
                             const dateStr = getWeekBeginningDate(b.idx + 1);
@@ -3525,7 +3648,7 @@
                                 borderColor: getThemeColors().tooltipBorder,
                                 borderWidth: 1,
                                 callbacks: {
-                                    title: function(context) {
+                                    title: function (context) {
                                         const w = parseInt(context[0].label, 10) || (context[0].parsed.x + 1);
                                         const dateStr = getWeekBeginningDate(w);
                                         return `Academic Week ${w}${dateStr ? ' (W/B ' + dateStr + ')' : ''}`;
@@ -3609,7 +3732,7 @@
                                 borderColor: getThemeColors().tooltipBorder,
                                 borderWidth: 1,
                                 callbacks: {
-                                    title: function(context) {
+                                    title: function (context) {
                                         const w = parseInt(context[0].label, 10) || (context[0].parsed.x + 1);
                                         const dateStr = getWeekBeginningDate(w);
                                         return `Academic Week ${w}${dateStr ? ' (W/B ' + dateStr + ')' : ''}`;
@@ -3718,12 +3841,12 @@
                             borderColor: getThemeColors().tooltipBorder,
                             borderWidth: 1,
                             callbacks: {
-                                title: function(context) {
+                                title: function (context) {
                                     const w = parseInt(context[0].label, 10) || (context[0].parsed.x + 1);
                                     const dateStr = getWeekBeginningDate(w);
                                     return `Academic Week ${w}${dateStr ? ' (W/B ' + dateStr + ')' : ''}`;
                                 },
-                                label: function(context) {
+                                label: function (context) {
                                     return `Flagged Courses: ${context.parsed.y}`;
                                 }
                             }
@@ -3849,7 +3972,7 @@
                                 color: getThemeColors().text,
                                 font: { family: 'Outfit', size: 10 }
                             },
-                            onClick: function(e, legendItem, legend) {
+                            onClick: function (e, legendItem, legend) {
                                 // Clicking a legend item toggles showing only that section (isolating it) vs showing all
                                 const label = legendItem.text;
                                 const secName = label.split(' ')[0];
@@ -3871,12 +3994,12 @@
                             borderColor: getThemeColors().tooltipBorder,
                             borderWidth: 1,
                             callbacks: {
-                                title: function(context) {
+                                title: function (context) {
                                     const w = parseInt(context[0].label, 10) || (context[0].parsed.x + 1);
                                     const dateStr = getWeekBeginningDate(w);
                                     return `Academic Week ${w}${dateStr ? ' (W/B ' + dateStr + ')' : ''}`;
                                 },
-                                label: function(context) {
+                                label: function (context) {
                                     let label = context.dataset.label.split(' (')[0] || '';
                                     if (label) {
                                         label += ': ';
@@ -3944,7 +4067,7 @@
 
                 const renderTTestResult = (metricName, secValues, otherValues, meanSecId, meanOthersId, tStatId, pValId, verdictId) => {
                     const result = runWelchTTest(secValues, otherValues);
-                    
+
                     const meanSecEl = document.getElementById(meanSecId);
                     const meanOthersEl = document.getElementById(meanOthersId);
                     const tStatEl = document.getElementById(tStatId);
@@ -4228,7 +4351,7 @@
                 // Specific course report
                 const course = processedCourses[selectedCourseIndex];
                 reportTitle = `Course Absence Analysis Report: ${course.code}`;
-                
+
                 const section = document.getElementById('detailSection').innerText;
                 const group = document.getElementById('detailGroup').innerText;
                 const maxA = document.getElementById('detailMaxA').innerText;
@@ -4729,24 +4852,24 @@
             const container = document.getElementById('selectedWeekDetailCard');
             const weekLabel = document.getElementById('selectedWeekNumberLabel');
             const tbody = document.getElementById('selectedWeekCoursesTableBody');
-            
+
             if (!container || !weekLabel || !tbody) return;
-            
+
             // Find matching courses
             const matches = flaggedCourses.filter(c => c.changeWeek === week);
-            
+
             weekLabel.innerText = week;
             tbody.innerHTML = '';
-            
+
             if (matches.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">No courses flagged in Academic Week ${week}.</td></tr>`;
             } else {
                 matches.forEach(c => {
                     const tr = document.createElement('tr');
-                    
+
                     const confClass = c.confidence.toLowerCase();
                     const actualIdx = processedCourses.findIndex(pc => pc.id === c.id);
-                    
+
                     tr.innerHTML = `
                         <td><strong>${c.code}</strong></td>
                         <td>${c.courseTitle || ''}</td>
@@ -4763,14 +4886,14 @@
                             </button>
                         </td>
                     `;
-                    
+
                     // Clicking the row selects the course and navigates
                     tr.onclick = () => selectAndNavigateToCourse(c.id);
-                    
+
                     tbody.appendChild(tr);
                 });
             }
-            
+
             container.style.display = 'block';
             // Scroll to the detail card smoothly so the user sees it
             container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -4780,10 +4903,10 @@
         function selectAndNavigateToCourse(courseId) {
             const idx = processedCourses.findIndex(c => c.id === courseId);
             if (idx === -1) return;
-            
+
             // 1. Select the course
             selectCourse(idx);
-            
+
             // 2. Switch to dashboard tab
             const tabBtn = document.querySelector('.tab-btn[onclick*="tabResults"]');
             if (tabBtn) {
@@ -4891,7 +5014,8 @@
     <dialog id="zoomModal" closedby="any" aria-label="Zoomed Container Panel">
         <div class="zoom-modal-header">
             <button class="zoom-close-btn" onclick="closeZoom()" title="Close Zoom">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                    stroke-linecap="round" stroke-linejoin="round">
                     <line x1="18" y1="6" x2="6" y2="18"></line>
                     <line x1="6" y1="6" x2="18" y2="18"></line>
                 </svg>
