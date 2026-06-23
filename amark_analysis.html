@@ -16,10 +16,61 @@
 
     <style>
         :root {
+            /* Light theme variables (Default - clean and bright) */
+            --bg-gradient-start: #f8fafc;
+            --bg-gradient-end: #e2e8f0;
+            --card-bg: rgba(255, 255, 255, 0.75);
+            --card-border: rgba(124, 58, 237, 0.1);
+            --card-border-hover: rgba(124, 58, 237, 0.24);
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #64748b;
+            --primary: #7c3aed;
+            --primary-glow: rgba(124, 58, 237, 0.2);
+            --secondary: #db2777;
+            --accent: #0891b2;
+            --success: #059669;
+            --warning: #d97706;
+            --danger: #dc2626;
+            --font-sans: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            --shadow-sm: 0 2px 8px rgba(124, 58, 237, 0.04), 0 1px 3px rgba(0, 0, 0, 0.02);
+            --shadow-md: 0 8px 24px rgba(124, 58, 237, 0.06), 0 4px 10px rgba(0, 0, 0, 0.03);
+            --shadow-lg: 0 16px 40px rgba(124, 58, 237, 0.08), 0 8px 20px rgba(0, 0, 0, 0.04);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+            /* Light-theme specific custom elements */
+            --sidebar-bg: rgba(248, 250, 252, 0.85);
+            --table-header-bg: #e2e8f0;
+            --table-row-hover: rgba(124, 58, 237, 0.04);
+            --input-bg: rgba(255, 255, 255, 0.8);
+            --input-border: rgba(124, 58, 237, 0.15);
+            --btn-secondary-bg: rgba(0, 0, 0, 0.03);
+            --btn-secondary-border: rgba(0, 0, 0, 0.08);
+            --btn-secondary-hover: rgba(0, 0, 0, 0.06);
+            --scrollbar-track: rgba(0, 0, 0, 0.05);
+            --scrollbar-thumb: rgba(0, 0, 0, 0.15);
+            --scrollbar-thumb-hover: rgba(0, 0, 0, 0.25);
+            --kpi-title-color: #475569;
+            --kpi-value-color: #0f172a;
+            --card-title-color: #0f172a;
+            --meta-value-color: #0f172a;
+            --progress-bar-bg: rgba(0, 0, 0, 0.06);
+            --brand-text-color: linear-gradient(to right, #4c1d95, #7c3aed);
+            --brand-title-color: #0f172a;
+            --stats-metric-bg: rgba(0, 0, 0, 0.015);
+            
+            /* Radial background filters */
+            --bg-radial-1: rgba(124, 58, 237, 0.06);
+            --bg-radial-2: rgba(219, 39, 119, 0.04);
+        }
+
+        .theme-dark {
+            /* Dark theme variables (Original - premium dark glassmorphism) */
             --bg-gradient-start: #0a0712;
             --bg-gradient-end: #030206;
             --card-bg: rgba(18, 14, 32, 0.65);
             --card-border: rgba(255, 255, 255, 0.08);
+            --card-border-hover: rgba(255, 255, 255, 0.15);
             --text-primary: #f1edf7;
             --text-secondary: #9c97b5;
             --text-muted: #64607d;
@@ -30,11 +81,34 @@
             --success: #10b981;
             --warning: #f59e0b;
             --danger: #ef4444;
-            --font-sans: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.5);
             --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.6);
             --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.8);
-            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+            /* Dark-theme specific custom elements */
+            --sidebar-bg: rgba(10, 8, 20, 0.85);
+            --table-header-bg: #110e22;
+            --table-row-hover: rgba(143, 67, 236, 0.04);
+            --input-bg: rgba(255, 255, 255, 0.04);
+            --input-border: rgba(255, 255, 255, 0.08);
+            --btn-secondary-bg: rgba(255, 255, 255, 0.05);
+            --btn-secondary-border: rgba(255, 255, 255, 0.08);
+            --btn-secondary-hover: rgba(255, 255, 255, 0.08);
+            --scrollbar-track: rgba(0, 0, 0, 0.2);
+            --scrollbar-thumb: rgba(255, 255, 255, 0.1);
+            --scrollbar-thumb-hover: rgba(255, 255, 255, 0.2);
+            --kpi-title-color: #9c97b5;
+            --kpi-value-color: #ffffff;
+            --card-title-color: #ffffff;
+            --meta-value-color: #ffffff;
+            --progress-bar-bg: rgba(255, 255, 255, 0.08);
+            --brand-text-color: linear-gradient(to right, #ffffff, #cfa9ff);
+            --brand-title-color: #ffffff;
+            --stats-metric-bg: rgba(255, 255, 255, 0.02);
+            
+            /* Radial background filters */
+            --bg-radial-1: rgba(143, 67, 236, 0.15);
+            --bg-radial-2: rgba(236, 72, 153, 0.1);
         }
 
         * {
@@ -47,14 +121,15 @@
             font-family: var(--font-sans);
             background-color: var(--bg-gradient-end);
             background-image:
-                radial-gradient(circle at 10% 20%, rgba(143, 67, 236, 0.15) 0%, transparent 40%),
-                radial-gradient(circle at 90% 80%, rgba(236, 72, 153, 0.1) 0%, transparent 40%),
+                radial-gradient(circle at 10% 20%, var(--bg-radial-1) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, var(--bg-radial-2) 0%, transparent 40%),
                 linear-gradient(to bottom, var(--bg-gradient-start), var(--bg-gradient-end));
             background-attachment: fixed;
             color: var(--text-primary);
             min-height: 100vh;
             line-height: 1.5;
             overflow-x: hidden;
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
 
         /* Layout Structure */
@@ -66,7 +141,7 @@
         /* Sidebar Styling */
         .sidebar {
             width: 340px;
-            background: rgba(10, 8, 20, 0.85);
+            background: var(--sidebar-bg);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             border-right: 1px solid var(--card-border);
@@ -78,6 +153,7 @@
             position: fixed;
             overflow-y: auto;
             z-index: 100;
+            transition: var(--transition);
         }
 
         .main-content {
@@ -105,13 +181,14 @@
             font-weight: 800;
             font-size: 1.25rem;
             box-shadow: 0 0 15px var(--primary-glow);
+            color: white;
         }
 
         .brand-text h1 {
             font-size: 1.25rem;
             font-weight: 700;
             letter-spacing: -0.025em;
-            background: linear-gradient(to right, #ffffff, #cfa9ff);
+            background: var(--brand-text-color);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
@@ -119,6 +196,36 @@
         .brand-text p {
             font-size: 0.75rem;
             color: var(--text-secondary);
+        }
+
+        /* Theme Switcher Button */
+        .theme-toggle-btn {
+            background: var(--btn-secondary-bg);
+            border: 1px solid var(--btn-secondary-border);
+            color: var(--text-primary);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: var(--transition);
+            flex-shrink: 0;
+        }
+
+        .theme-toggle-btn:hover {
+            background: var(--btn-secondary-hover);
+            transform: scale(1.05);
+            box-shadow: 0 0 10px rgba(124, 58, 237, 0.15);
+        }
+
+        .theme-toggle-btn svg {
+            width: 18px;
+            height: 18px;
+            stroke: var(--text-primary);
+            fill: none;
+            transition: var(--transition);
         }
 
         /* File Upload Area */
@@ -129,11 +236,11 @@
         }
 
         .upload-box {
-            border: 2px dashed rgba(143, 67, 236, 0.4);
+            border: 2px dashed rgba(124, 58, 237, 0.4);
             border-radius: 16px;
             padding: 2rem 1rem;
             text-align: center;
-            background: rgba(143, 67, 236, 0.03);
+            background: rgba(124, 58, 237, 0.03);
             cursor: pointer;
             transition: var(--transition);
             display: flex;
@@ -145,8 +252,8 @@
         .upload-box:hover,
         .upload-box.dragover {
             border-color: var(--primary);
-            background: rgba(143, 67, 236, 0.08);
-            box-shadow: 0 0 15px rgba(143, 67, 236, 0.15);
+            background: rgba(124, 58, 237, 0.08);
+            box-shadow: 0 0 15px rgba(124, 58, 237, 0.15);
         }
 
         .upload-box svg {
@@ -183,7 +290,7 @@
             display: flex;
             align-items: center;
             gap: 0.5rem;
-            background: rgba(255, 255, 255, 0.05);
+            background: var(--btn-secondary-bg);
             border: 1px solid var(--card-border);
         }
 
@@ -207,7 +314,7 @@
 
         /* Form Controls & Sliders */
         .controls-card {
-            background: rgba(255, 255, 255, 0.02);
+            background: var(--stats-metric-bg);
             border: 1px solid var(--card-border);
             border-radius: 16px;
             padding: 1.25rem;
@@ -252,7 +359,7 @@
             -webkit-appearance: none;
             width: 100%;
             height: 6px;
-            background: rgba(255, 255, 255, 0.1);
+            background: var(--progress-bar-bg);
             border-radius: 3px;
             outline: none;
             transition: var(--transition);
@@ -266,7 +373,7 @@
             border-radius: 50%;
             background: linear-gradient(135deg, var(--primary), var(--secondary));
             cursor: pointer;
-            box-shadow: 0 0 10px rgba(143, 67, 236, 0.5);
+            box-shadow: 0 0 10px rgba(124, 58, 237, 0.5);
             transition: var(--transition);
         }
 
@@ -302,8 +409,8 @@
         }
 
         .number-input {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--card-border);
+            background: var(--input-bg);
+            border: 1px solid var(--input-border);
             border-radius: 8px;
             padding: 0.4rem 0.6rem;
             color: var(--text-primary);
@@ -316,7 +423,7 @@
 
         .number-input:focus {
             border-color: var(--primary);
-            box-shadow: 0 0 8px rgba(143, 67, 236, 0.2);
+            box-shadow: 0 0 8px rgba(124, 58, 237, 0.2);
         }
 
         /* Buttons */
@@ -339,12 +446,12 @@
         .btn-primary {
             background: linear-gradient(135deg, var(--primary), var(--secondary));
             color: white;
-            box-shadow: 0 4px 15px rgba(143, 67, 236, 0.3);
+            box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);
         }
 
         .btn-primary:hover:not(:disabled) {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(143, 67, 236, 0.45);
+            box-shadow: 0 6px 20px rgba(124, 58, 237, 0.45);
         }
 
         .btn-primary:active:not(:disabled) {
@@ -352,14 +459,14 @@
         }
 
         .btn-secondary {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--card-border);
+            background: var(--btn-secondary-bg);
+            border: 1px solid var(--btn-secondary-border);
             color: var(--text-primary);
         }
 
         .btn-secondary:hover:not(:disabled) {
-            background: rgba(255, 255, 255, 0.08);
-            border-color: rgba(255, 255, 255, 0.15);
+            background: var(--btn-secondary-hover);
+            border-color: var(--btn-secondary-border);
         }
 
         .btn:disabled {
@@ -442,7 +549,7 @@
 
         .kpi-card:hover {
             transform: translateY(-2px);
-            border-color: rgba(255, 255, 255, 0.15);
+            border-color: var(--card-border-hover);
             box-shadow: var(--shadow-md);
         }
 
@@ -468,7 +575,7 @@
             font-size: 2rem;
             font-weight: 700;
             letter-spacing: -0.03em;
-            color: white;
+            color: var(--kpi-value-color);
             line-height: 1;
         }
 
@@ -499,11 +606,11 @@
         }
 
         .tab-btn:hover {
-            color: white;
+            color: var(--text-primary);
         }
 
         .tab-btn.active {
-            color: var(--primary-light);
+            color: var(--primary);
         }
 
         .tab-btn.active::after {
@@ -561,7 +668,7 @@
         .card-title {
             font-size: 1.1rem;
             font-weight: 700;
-            color: white;
+            color: var(--card-title-color);
             display: flex;
             align-items: center;
             gap: 0.5rem;
@@ -590,11 +697,11 @@
 
         .search-box input {
             width: 100%;
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid var(--card-border);
+            background: var(--input-bg);
+            border: 1px solid var(--input-border);
             border-radius: 10px;
             padding: 0.5rem 1rem 0.5rem 2.25rem;
-            color: white;
+            color: var(--text-primary);
             font-family: var(--font-sans);
             font-size: 0.85rem;
             outline: none;
@@ -603,7 +710,7 @@
 
         .search-box input:focus {
             border-color: var(--primary);
-            box-shadow: 0 0 10px rgba(143, 67, 236, 0.15);
+            box-shadow: 0 0 10px rgba(124, 58, 237, 0.15);
         }
 
         .search-box svg {
@@ -620,8 +727,8 @@
             width: 100%;
             overflow-x: auto;
             border-radius: 12px;
-            background: rgba(255, 255, 255, 0.01);
-            border: 1px solid rgba(255, 255, 255, 0.05);
+            background: var(--stats-metric-bg);
+            border: 1px solid var(--card-border);
             max-height: 480px;
             position: relative;
         }
@@ -636,7 +743,7 @@
         thead {
             position: sticky;
             top: 0;
-            background: #110e22;
+            background: var(--table-header-bg);
             z-index: 10;
         }
 
@@ -652,8 +759,8 @@
         }
 
         th:hover {
-            color: white;
-            background: rgba(255, 255, 255, 0.03);
+            color: var(--text-primary);
+            background: var(--table-row-hover);
         }
 
         th.sorted-asc::after {
@@ -668,7 +775,7 @@
 
         td {
             padding: 0.75rem 1rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            border-bottom: 1px solid var(--card-border);
             color: var(--text-primary);
             max-width: 250px;
             overflow: hidden;
@@ -682,11 +789,11 @@
         }
 
         tr:hover {
-            background: rgba(143, 67, 236, 0.04);
+            background: var(--table-row-hover);
         }
 
         tr.selected {
-            background: rgba(143, 67, 236, 0.1) !important;
+            background: rgba(124, 58, 237, 0.08) !important;
             border-left: 3px solid var(--primary);
         }
 
@@ -720,17 +827,19 @@
         }
 
         .conf-badge.none {
-            background: rgba(255, 255, 255, 0.04);
+            background: var(--btn-secondary-bg);
             color: var(--text-secondary);
             border: 1px solid var(--card-border);
         }
 
         .week-badge {
-            background: rgba(255, 255, 255, 0.08);
+            background: var(--btn-secondary-bg);
             padding: 0.15rem 0.4rem;
             border-radius: 4px;
             font-weight: 600;
             font-size: 0.75rem;
+            color: var(--text-primary);
+            border: 1px solid var(--card-border);
         }
 
         /* Pagination */
@@ -749,9 +858,9 @@
         }
 
         .page-btn {
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid var(--card-border);
-            color: white;
+            background: var(--btn-secondary-bg);
+            border: 1px solid var(--btn-secondary-border);
+            color: var(--text-primary);
             padding: 0.35rem 0.75rem;
             border-radius: 6px;
             cursor: pointer;
@@ -759,8 +868,8 @@
         }
 
         .page-btn:hover:not(:disabled) {
-            background: rgba(255, 255, 255, 0.08);
-            border-color: rgba(255, 255, 255, 0.15);
+            background: var(--btn-secondary-hover);
+            border-color: var(--btn-secondary-border);
         }
 
         .page-btn:disabled {
@@ -771,6 +880,7 @@
         .page-btn.active {
             background: var(--primary);
             border-color: var(--primary);
+            color: white;
         }
 
         /* Course Detail Panel Styling */
@@ -778,7 +888,7 @@
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
             gap: 0.75rem;
-            background: rgba(255, 255, 255, 0.02);
+            background: var(--stats-metric-bg);
             border: 1px solid var(--card-border);
             border-radius: 12px;
             padding: 1rem;
@@ -799,11 +909,11 @@
         .meta-value {
             font-size: 0.9rem;
             font-weight: 600;
-            color: white;
+            color: var(--meta-value-color);
         }
 
         .explanation-box {
-            background: rgba(143, 67, 236, 0.05);
+            background: rgba(124, 58, 237, 0.05);
             border-left: 3px solid var(--primary);
             padding: 0.75rem 1rem;
             border-radius: 0 8px 8px 0;
@@ -823,7 +933,7 @@
         .chart-toggle-group {
             display: flex;
             gap: 0.25rem;
-            background: rgba(255, 255, 255, 0.05);
+            background: var(--progress-bar-bg);
             padding: 0.2rem;
             border-radius: 8px;
         }
@@ -842,8 +952,9 @@
         }
 
         .chart-toggle-btn.active {
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
+            background: var(--btn-secondary-hover);
+            color: var(--text-primary);
+            border: 1px solid var(--card-border);
         }
 
         .chart-container {
@@ -867,7 +978,7 @@
 
         /* Utility classes */
         .text-gradient {
-            background: linear-gradient(to right, var(--primary-light), var(--secondary));
+            background: linear-gradient(to right, var(--primary), var(--secondary));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
@@ -893,7 +1004,7 @@
             text-align: center;
             color: var(--text-muted);
             gap: 1rem;
-            border: 2px dashed rgba(255, 255, 255, 0.04);
+            border: 2px dashed var(--card-border);
             border-radius: 20px;
             height: 100%;
         }
@@ -904,6 +1015,32 @@
             stroke: var(--text-muted);
         }
 
+        /* Statistical Verdict Styling Classes */
+        .verdict-badge {
+            margin-top: 0.8rem;
+            font-size: 0.75rem;
+            padding: 0.35rem 0.5rem;
+            border-radius: 4px;
+            text-align: center;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+        .verdict-higher {
+            background: rgba(239, 68, 68, 0.12);
+            color: var(--danger);
+        }
+
+        .verdict-lower {
+            background: rgba(16, 185, 129, 0.12);
+            color: var(--success);
+        }
+
+        .verdict-neutral {
+            background: var(--btn-secondary-bg);
+            color: var(--text-secondary);
+        }
+
         /* Scrollbars */
         ::-webkit-scrollbar {
             width: 8px;
@@ -911,33 +1048,52 @@
         }
 
         ::-webkit-scrollbar-track {
-            background: rgba(0, 0, 0, 0.2);
+            background: var(--scrollbar-track);
         }
 
         ::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.1);
+            background: var(--scrollbar-thumb);
             border-radius: 4px;
         }
 
         ::-webkit-scrollbar-thumb:hover {
-            background: rgba(255, 255, 255, 0.2);
+            background: var(--scrollbar-thumb-hover);
         }
     </style>
 </head>
 
 <body>
+    <script>
+        // Apply theme immediately to prevent layout flashing
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            if (savedTheme === 'dark') {
+                document.body.classList.add('theme-dark');
+            } else {
+                document.body.classList.remove('theme-dark');
+            }
+        })();
+    </script>
 
     <div class="app-container">
         <!-- Sidebar Area -->
         <div class="sidebar">
             <!-- Brand Header -->
-            <div class="brand">
-                <div class="brand-icon">A</div>
-                <div class="brand-text">
-                    <h1>A-Mark Analyzer</h1>
-                    <p>Early Course Completion Detection</p>
+            <div class="brand" style="justify-content: space-between; width: 100%;">
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <div class="brand-icon">A</div>
+                    <div class="brand-text">
+                        <h1>A-Mark Analyzer</h1>
+                        <p>Early Course Completion Detection</p>
+                    </div>
                 </div>
+                <button class="theme-toggle-btn" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle Theme">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                </button>
             </div>
+
 
             <!-- File Upload Box -->
             <div class="upload-section">
@@ -1742,8 +1898,81 @@
         let distChart = null;
         let secChart = null;
 
+        // Theme Management
+        let currentTheme = 'light';
+
+        function initTheme() {
+            currentTheme = localStorage.getItem('theme') || 'light';
+            applyTheme(currentTheme);
+        }
+
+        function applyTheme(theme) {
+            if (theme === 'dark') {
+                document.body.classList.add('theme-dark');
+            } else {
+                document.body.classList.remove('theme-dark');
+            }
+            updateThemeToggleButton(theme);
+            
+            // Re-draw active charts to update grid/axis colors
+            if (rawData) {
+                drawDetailChart();
+                drawDistributionChart();
+                updateSectionChart();
+            }
+        }
+
+        function toggleTheme() {
+            currentTheme = currentTheme === 'light' ? 'dark' : 'light';
+            localStorage.setItem('theme', currentTheme);
+            applyTheme(currentTheme);
+        }
+
+        function updateThemeToggleButton(theme) {
+            const btn = document.getElementById('themeToggle');
+            if (!btn) return;
+            
+            if (theme === 'dark') {
+                btn.innerHTML = `
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                `;
+            } else {
+                btn.innerHTML = `
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                `;
+            }
+        }
+
+        function getThemeColors() {
+            const isDark = document.body.classList.contains('theme-dark');
+            return {
+                text: isDark ? '#9c97b5' : '#475569',
+                grid: isDark ? 'rgba(255, 255, 255, 0.04)' : 'rgba(0, 0, 0, 0.05)',
+                tooltipBg: isDark ? '#110e22' : '#ffffff',
+                tooltipText: isDark ? '#f1edf7' : '#0f172a',
+                tooltipBorder: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+                primary: isDark ? '#8f43ec' : '#7c3aed',
+                primaryGlow: isDark ? 'rgba(143, 67, 236, 0.08)' : 'rgba(124, 58, 237, 0.08)',
+                accent: isDark ? '#06b6d4' : '#0891b2',
+                accentGlow: isDark ? 'rgba(6, 182, 212, 0.4)' : 'rgba(8, 145, 178, 0.4)'
+            };
+        }
+
         // Load initial hooks
         document.addEventListener("DOMContentLoaded", () => {
+            initTheme();
             setupDragAndDrop();
             toggleExamWeeksInput();
         });
@@ -2823,7 +3052,8 @@
 
                 const { top, bottom, left, right } = chartArea;
                 ctx.save();
-                ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)'; // Semi-transparent crisp white (0.45 opacity)
+                const isDark = document.body.classList.contains('theme-dark');
+                ctx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.45)' : 'rgba(0, 0, 0, 0.2)'; // Semi-transparent crisp white/dark
                 ctx.lineWidth = 1.2;
                 ctx.setLineDash([5, 5]);
 
@@ -2850,7 +3080,7 @@
                         ctx.lineTo(xPos, bottom);
                         ctx.stroke();
 
-                        ctx.fillStyle = '#a5a1b8';
+                        ctx.fillStyle = isDark ? '#a5a1b8' : '#64748b';
                         ctx.font = '9px Outfit, sans-serif';
                         ctx.textAlign = 'right';
                         ctx.fillText(b.label, xPos - 5, top + b.yOffset);
@@ -2905,12 +3135,12 @@
                         datasets: [{
                             label: 'Average Absences',
                             data: dataPoints,
-                            borderColor: '#06b6d4',
-                            backgroundColor: 'rgba(6, 182, 212, 0.08)',
+                            borderColor: getThemeColors().primary,
+                            backgroundColor: getThemeColors().primaryGlow,
                             borderWidth: 2,
                             fill: true,
                             tension: 0.2,
-                            pointBackgroundColor: '#06b6d4',
+                            pointBackgroundColor: getThemeColors().primary,
                             pointRadius: 3,
                             pointHoverRadius: 6
                         }]
@@ -2921,10 +3151,10 @@
                         plugins: {
                             legend: { display: false },
                             tooltip: {
-                                backgroundColor: '#110e22',
-                                titleColor: '#fff',
-                                bodyColor: '#fff',
-                                borderColor: 'rgba(255,255,255,0.1)',
+                                backgroundColor: getThemeColors().tooltipBg,
+                                titleColor: getThemeColors().tooltipText,
+                                bodyColor: getThemeColors().tooltipText,
+                                borderColor: getThemeColors().tooltipBorder,
                                 borderWidth: 1,
                                 callbacks: {
                                     title: function(context) {
@@ -2939,16 +3169,16 @@
                         },
                         scales: {
                             x: {
-                                grid: { color: 'rgba(255,255,255,0.04)' },
-                                ticks: { color: '#9c97b5', font: { family: 'Outfit', size: 9 } },
-                                title: { display: true, text: 'Academic Week', color: '#9c97b5', font: { family: 'Outfit', size: 10 } }
+                                grid: { color: getThemeColors().grid },
+                                ticks: { color: getThemeColors().text, font: { family: 'Outfit', size: 9 } },
+                                title: { display: true, text: 'Academic Week', color: getThemeColors().text, font: { family: 'Outfit', size: 10 } }
                             },
                             y: {
                                 min: 0,
                                 max: yMax,
-                                grid: { color: 'rgba(255,255,255,0.04)' },
-                                ticks: { color: '#9c97b5', font: { family: 'Outfit', size: 9 }, stepSize: stepSize },
-                                title: { display: true, text: yLabel, color: '#9c97b5', font: { family: 'Outfit', size: 10 } }
+                                grid: { color: getThemeColors().grid },
+                                ticks: { color: getThemeColors().text, font: { family: 'Outfit', size: 9 }, stepSize: stepSize },
+                                title: { display: true, text: yLabel, color: getThemeColors().text, font: { family: 'Outfit', size: 10 } }
                             }
                         }
                     },
@@ -2979,15 +3209,15 @@
                         datasets: [{
                             label: detailChartMode === 'RAW' ? 'Weekly A Marks' : 'Normalized Absence %',
                             data: dataPoints,
-                            borderColor: '#8f43ec',
-                            backgroundColor: 'rgba(143, 67, 236, 0.08)',
+                            borderColor: getThemeColors().primary,
+                            backgroundColor: getThemeColors().primaryGlow,
                             borderWidth: 2,
                             fill: true,
                             tension: 0.2,
                             pointBackgroundColor: labels.map(w => {
                                 if (w === changeWk) return '#ec4899'; // Pink marker for change-week
                                 if (w === maxWk) return '#10b981'; // Green marker for max-week
-                                return '#8f43ec';
+                                return getThemeColors().primary;
                             }),
                             pointRadius: labels.map(w => {
                                 if (w === changeWk || w === maxWk) return 6;
@@ -3004,10 +3234,10 @@
                                 display: false
                             },
                             tooltip: {
-                                backgroundColor: '#110e22',
-                                titleColor: '#fff',
-                                bodyColor: '#fff',
-                                borderColor: 'rgba(255,255,255,0.1)',
+                                backgroundColor: getThemeColors().tooltipBg,
+                                titleColor: getThemeColors().tooltipText,
+                                bodyColor: getThemeColors().tooltipText,
+                                borderColor: getThemeColors().tooltipBorder,
                                 borderWidth: 1,
                                 callbacks: {
                                     title: function(context) {
@@ -3033,16 +3263,16 @@
                         scales: {
                             x: {
                                 grid: {
-                                    color: 'rgba(255,255,255,0.04)'
+                                    color: getThemeColors().grid
                                 },
                                 ticks: {
-                                    color: '#9c97b5',
+                                    color: getThemeColors().text,
                                     font: { family: 'Outfit', size: 9 }
                                 },
                                 title: {
                                     display: true,
                                     text: 'Academic Week',
-                                    color: '#9c97b5',
+                                    color: getThemeColors().text,
                                     font: { family: 'Outfit', size: 10 }
                                 }
                             },
@@ -3050,17 +3280,17 @@
                                 min: 0,
                                 max: yMax,
                                 grid: {
-                                    color: 'rgba(255,255,255,0.04)'
+                                    color: getThemeColors().grid
                                 },
                                 ticks: {
-                                    color: '#9c97b5',
+                                    color: getThemeColors().text,
                                     font: { family: 'Outfit', size: 9 },
                                     stepSize: stepSize
                                 },
                                 title: {
                                     display: true,
                                     text: yLabel,
-                                    color: '#9c97b5',
+                                    color: getThemeColors().text,
                                     font: { family: 'Outfit', size: 10 }
                                 }
                             }
@@ -3088,8 +3318,8 @@
                     datasets: [{
                         label: 'Flagged Courses',
                         data: data,
-                        backgroundColor: 'rgba(6, 182, 212, 0.4)',
-                        borderColor: '#06b6d4',
+                        backgroundColor: getThemeColors().accentGlow,
+                        borderColor: getThemeColors().accent,
                         borderWidth: 1.5,
                         borderRadius: 4
                     }]
@@ -3116,16 +3346,16 @@
                         x: {
                             grid: { display: false },
                             ticks: {
-                                color: '#9c97b5',
+                                color: getThemeColors().text,
                                 font: { family: 'Outfit', size: 9 },
                                 maxTicksLimit: 26
                             }
                         },
                         y: {
                             beginAtZero: true,
-                            grid: { color: 'rgba(255, 255, 255, 0.04)' },
+                            grid: { color: getThemeColors().grid },
                             ticks: {
-                                color: '#9c97b5',
+                                color: getThemeColors().text,
                                 font: { family: 'Outfit', size: 9 },
                                 precision: 0
                             }
@@ -3229,7 +3459,7 @@
                         legend: {
                             position: 'top',
                             labels: {
-                                color: '#9c97b5',
+                                color: getThemeColors().text,
                                 font: { family: 'Outfit', size: 10 }
                             },
                             onClick: function(e, legendItem, legend) {
@@ -3248,10 +3478,10 @@
                             }
                         },
                         tooltip: {
-                            backgroundColor: '#110e22',
-                            titleColor: '#fff',
-                            bodyColor: '#fff',
-                            borderColor: 'rgba(255,255,255,0.1)',
+                            backgroundColor: getThemeColors().tooltipBg,
+                            titleColor: getThemeColors().tooltipText,
+                            bodyColor: getThemeColors().tooltipText,
+                            borderColor: getThemeColors().tooltipBorder,
                             borderWidth: 1,
                             callbacks: {
                                 title: function(context) {
@@ -3273,31 +3503,31 @@
                     },
                     scales: {
                         x: {
-                            grid: { color: 'rgba(255, 255, 255, 0.04)' },
+                            grid: { color: getThemeColors().grid },
                             ticks: {
-                                color: '#9c97b5',
+                                color: getThemeColors().text,
                                 font: { family: 'Outfit', size: 9 }
                             },
                             title: {
                                 display: true,
                                 text: 'Academic Week',
-                                color: '#9c97b5',
+                                color: getThemeColors().text,
                                 font: { family: 'Outfit', size: 10 }
                             }
                         },
                         y: {
                             min: 0,
                             max: 105,
-                            grid: { color: 'rgba(255, 255, 255, 0.04)' },
+                            grid: { color: getThemeColors().grid },
                             ticks: {
-                                color: '#9c97b5',
+                                color: getThemeColors().text,
                                 font: { family: 'Outfit', size: 9 },
                                 stepSize: 20
                             },
                             title: {
                                 display: true,
                                 text: 'Average % of Maximum A Marks',
-                                color: '#9c97b5',
+                                color: getThemeColors().text,
                                 font: { family: 'Outfit', size: 10 }
                             }
                         }
@@ -3340,8 +3570,7 @@
                         if (pValEl) pValEl.innerText = 'N/A';
                         if (verdictEl) {
                             verdictEl.innerText = result.error;
-                            verdictEl.style.background = 'rgba(255, 255, 255, 0.06)';
-                            verdictEl.style.color = 'var(--text-secondary)';
+                            verdictEl.className = 'verdict-badge verdict-neutral';
                         }
                         return;
                     }
@@ -3355,20 +3584,18 @@
                     if (pValEl) pValEl.innerText = pFormatted;
 
                     if (verdictEl) {
+                        verdictEl.className = 'verdict-badge';
                         if (result.isSignificant) {
                             if (diff > 0) {
                                 verdictEl.innerText = 'Significantly Higher (p < 0.05)';
-                                verdictEl.style.background = 'rgba(239, 68, 68, 0.15)';
-                                verdictEl.style.color = '#fca5a5';
+                                verdictEl.classList.add('verdict-higher');
                             } else {
                                 verdictEl.innerText = 'Significantly Lower (p < 0.05)';
-                                verdictEl.style.background = 'rgba(16, 185, 129, 0.15)';
-                                verdictEl.style.color = '#a7f3d0';
+                                verdictEl.classList.add('verdict-lower');
                             }
                         } else {
                             verdictEl.innerText = 'Not Statistically Different';
-                            verdictEl.style.background = 'rgba(255, 255, 255, 0.06)';
-                            verdictEl.style.color = '#d1d5db';
+                            verdictEl.classList.add('verdict-neutral');
                         }
                     }
                 };
@@ -3611,20 +3838,7 @@
                 matches.forEach(c => {
                     const tr = document.createElement('tr');
                     
-                    // Confidence badge styling
-                    let badgeColor = '#d1d5db';
-                    let badgeBg = 'rgba(255,255,255,0.06)';
-                    if (c.confidence === 'HIGH') {
-                        badgeColor = '#a7f3d0';
-                        badgeBg = 'rgba(16, 185, 129, 0.15)';
-                    } else if (c.confidence === 'MEDIUM') {
-                        badgeColor = '#fde047';
-                        badgeBg = 'rgba(234, 179, 8, 0.15)';
-                    } else if (c.confidence === 'LOW') {
-                        badgeColor = '#fca5a5';
-                        badgeBg = 'rgba(239, 68, 68, 0.15)';
-                    }
-                    
+                    const confClass = c.confidence.toLowerCase();
                     const actualIdx = processedCourses.findIndex(pc => pc.id === c.id);
                     
                     tr.innerHTML = `
@@ -3633,7 +3847,7 @@
                         <td>${c.section || ''}</td>
                         <td style="text-align: right; font-weight: 600;">${(c.changeScore * 100).toFixed(0)}%</td>
                         <td style="text-align: center;">
-                            <span style="font-size: 0.7rem; font-weight: 600; padding: 0.15rem 0.4rem; border-radius: 4px; color: ${badgeColor}; background: ${badgeBg};">
+                            <span class="conf-badge ${confClass}">
                                 ${c.confidence}
                             </span>
                         </td>
